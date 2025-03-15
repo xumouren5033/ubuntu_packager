@@ -1,52 +1,55 @@
-name: Build Ubuntu LiveCD Image
 
-on:
+
+name: Build LiveCD
+
+on: 
   push:
-    branches:
-      - main
-  workflow_dispatch:  # 手动触发
 
 jobs:
-  build-livecd:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Update package list
-        run: sudo apt-get update
-
-      - name: Install live-build and dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get install -y live-build xorriso coreutils
+          sudo apt-get update
+          sudo apt-get install -y debootstrap squashfs-tools xorriso coreutils
 
-      - name: Create working directory
-        run: sudo mkdir -p /live
-
-      - name: Configure live-build
+      - name: Create LiveCD
         run: |
-          cd /live
-          sudo lb config \
-            --architectures amd64 \
-            --linux-flavours generic \
-            --binary-images iso-hybrid \
-            --iso-application "Ubuntu Live" \
-            --iso-preparer "Live Build" \
-            --iso-publisher "Your Name" \
-            --iso-volume "Ubuntu Live Volume" \
-            --debian-installer live \
-            --distribution jammy
+          # 创建工作目录
+          mkdir -p ~/livecd
+          cd ~/livecd
 
-      - name: Build LiveCD Image
-        run: |
-          cd /live
-          sudo dpkg-divert --remove /usr/sbin/start-stop-daemon || true
-          sudo dpkg-divert --rename /usr/sbin/start-stop-daemon || true
-          sudo lb build
+          # 使用 debootstrap 创建基础系统
+          sudo debootstrap --arch=amd64 jammy chroot http://archive.ubuntu.com/ubuntu/
 
-      - name: Upload LiveCD Image as Artifact
-        uses: actions/upload-artifact@v4
+          # 挂载必要的文件系统
+          sudo mount --bind /dev chroot/dev
+          sudo mount --bind /run chroot/run
+
+          # 进入 chroot 环境并安装必要的包
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot"
+
+          # 解除挂载
+          sudo umount chroot/dev
+          sudo umount chroot/run
+
+          # 创建 squashfs 文件系统
+          sudo mksquashfs chroot filesystem.squashfs -comp xz
+
+          # 创建 ISO 文件
+          sudo xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes \
+            -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 \
+            -A "Ubuntu LiveCD" -b isolinux/isolinux.bin -c isolinux/boot.cat \
+            -no-emul-boot -boot-load-size 4 -boot-info-table \
+            -o ubuntu-livecd.iso binary
+
+      - name: Upload ISO as artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: ubuntu-live.iso
-          path: /live/binary.hybrid.iso
+          name: Ubuntu LiveCD ISO
+          path: ~/livecd/ubuntu-livecd.iso
