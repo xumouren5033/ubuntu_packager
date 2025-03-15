@@ -36,7 +36,7 @@ jobs:
             --iso-publisher "Your Name" \
             --iso-volume "Ubuntu Live Volume" \
             --debian-installer live \
-            --distribution noble  # 使用 Ubuntu 24.04 (代号 noble)
+            --distribution jammy
 
       - name: Build LiveCD Image
         run: |
