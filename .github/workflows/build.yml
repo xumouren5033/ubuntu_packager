@@ -19,7 +19,7 @@ jobs:
 
       - name: Install live-build and dependencies
         run: |
-          sudo apt-get install -y live-build xorriso
+          sudo apt-get install -y live-build xorriso coreutils
 
       - name: Create working directory
         run: sudo mkdir -p /live
@@ -35,7 +35,8 @@ jobs:
             --iso-preparer "Live Build" \
             --iso-publisher "Your Name" \
             --iso-volume "Ubuntu Live Volume" \
-            --debian-installer live
+            --debian-installer live \
+            --distribution noble  # 使用 Ubuntu 24.04 (代号 noble)
 
       - name: Build LiveCD Image
         run: |
