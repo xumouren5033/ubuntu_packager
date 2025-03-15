@@ -42,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: custom.iso  # 自定义的 ISO 文件名
-          path: /home/remastersys/remastersys/custom.iso  # 假设 ISO 文件生成路径
+          path: /home/remastersys/custom.iso  # 假设 ISO 文件生成路径
