@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -53,7 +53,7 @@ jobs:
             -o ubuntu-livecd.iso binary
 
       - name: Upload ISO as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Ubuntu LiveCD ISO
           path: ~/livecd/ubuntu-livecd.iso
