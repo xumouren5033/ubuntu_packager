@@ -36,12 +36,13 @@ jobs:
             --iso-publisher "Your Name" \
             --iso-volume "Ubuntu Live Volume" \
             --debian-installer live \
-            --distribution jammy \
-            --debootstrap-options "--variant=minbase"
+            --distribution jammy
 
       - name: Build LiveCD Image
         run: |
           cd /live
+          sudo dpkg-divert --remove /usr/sbin/start-stop-daemon || true
+          sudo dpkg-divert --rename /usr/sbin/start-stop-daemon || true
           sudo lb build
 
       - name: Upload LiveCD Image as Artifact
