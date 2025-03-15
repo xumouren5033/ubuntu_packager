@@ -47,8 +47,8 @@ jobs:
 
           # 创建 binary 目录并复制必要的启动文件
           mkdir -p ~/livecd/binary/isolinux
-          cp /usr/lib/ISOLINUX/isolinux.bin ~/livecd/binary/isolinux/
-          cp /usr/lib/ISOLINUX/boot.cat ~/livecd/binary/isolinux/
+          sudo cp /usr/lib/ISOLINUX/isolinux.bin ~/livecd/binary/isolinux/
+          sudo cp /usr/lib/ISOLINUX/boot.cat ~/livecd/binary/isolinux/
 
           # 创建 ISO 文件
           sudo xorriso -as mkisofs -r -J -joliet-long \
