@@ -1,9 +1,9 @@
-name: Build and Publish LiveCD Image
+name: Build Ubuntu LiveCD Image
 
 on:
   push:
     branches:
-      - main  # 触发分支
+      - main
   workflow_dispatch:  # 手动触发
 
 jobs:
@@ -14,17 +14,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Update package list
+        run: sudo apt-get update
+
+      - name: Install live-build and dependencies
+        run: |
+          sudo apt-get install -y live-build xorriso
+
+      - name: Create working directory
+        run: mkdir -p /live
+
+      - name: Configure live-build
+        run: |
+          cd /live
+          lb config \
+            --architectures amd64 \
+            --linux-flavours generic \
+            --binary-images iso-hybrid \
+            --iso-application "Ubuntu Live" \
+            --iso-preparer "Live Build" \
+            --iso-publisher "Your Name" \
+            --iso-volume "Ubuntu Live Volume" \
+            --debian-installer live
 
       - name: Build LiveCD Image
         run: |
-          docker build -t livecd-builder .
-          docker run --name livecd-builder livecd-builder
-          docker cp livecd-builder:/live/binary.hybrid.iso ./ubuntu-live.iso
+          cd /live
+          lb build
 
-      - name: Upload LiveCD ISO as Artifact
+      - name: Upload LiveCD Image as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-live.iso
-          path: ./ubuntu-live.iso
+          path: /live/binary.hybrid.iso
