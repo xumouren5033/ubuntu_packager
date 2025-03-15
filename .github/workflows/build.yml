@@ -1,64 +1,45 @@
-name: Build LiveCD
+name: Remastersys Live CD Build
 
-on: 
+on:
   push:
+    branches:
+      - main  # 触发分支
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-livecd:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso coreutils
+          sudo apt-get install -y live-config-systemd syslinux-common syslinux-efi syslinux-utils zstd coreutils
 
-      - name: Create LiveCD
+      - name: Clone Remastersys repository
         run: |
-          # 创建工作目录
-          mkdir -p ~/livecd
-          cd ~/livecd
+          git clone https://github.com/nerun/remastersys.git
+          cd remastersys
 
-          # 使用 debootstrap 创建基础系统
-          sudo debootstrap --arch=amd64 jammy chroot http://archive.ubuntu.com/ubuntu/
+      - name: Create Debian packages
+        run: |
+          cd remastersys
+          ./package-creator
+          sudo apt install ./remastersys*.deb
 
-          # 挂载必要的文件系统
-          sudo mount --bind /dev chroot/dev
-          sudo mount --bind /run chroot/run
-          sudo mount --bind /proc chroot/proc
+      - name: Create CDFS
+        run: |
+          sudo remastersys dist cdfs  # 创建 CD 文件系统
 
-          # 启用 universe 软件源
-          echo "deb http://archive.ubuntu.com/ubuntu noble universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb http://archive.ubuntu.com/ubuntu noble-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+      - name: Create Live CD ISO
+        run: |
+          sudo remastersys dist iso custom.iso  # 生成自定义的 ISO 文件
 
-          # 进入 chroot 环境并安装必要的包
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv"
-
-          # 解除挂载
-          sudo umount chroot/dev
-          sudo umount chroot/run
-          sudo umount chroot/proc
-
-          # 创建 squashfs 文件系统
-          sudo mksquashfs chroot filesystem.squashfs -comp xz
-
-          # 创建 binary 目录并复制必要的启动文件
-          mkdir -p ~/livecd/binary/isolinux
-          sudo cp /usr/lib/ISOLINUX/isolinux.bin ~/livecd/binary/isolinux/
-          sudo cp /usr/lib/ISOLINUX/boot.cat ~/livecd/binary/isolinux/
-
-          # 创建 ISO 文件
-          sudo xorriso -as mkisofs -r -J -joliet-long \
-            -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 \
-            -A "Ubuntu LiveCD" -b isolinux/isolinux.bin -c isolinux/boot.cat \
-            -no-emul-boot -boot-load-size 4 -boot-info-table \
-            -o ubuntu-livecd.iso ~/livecd/binary
-
-      - name: Upload ISO as artifact
+      - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Ubuntu LiveCD ISO
-          path: ~/livecd/ubuntu-livecd.iso
+          name: custom.iso  # 自定义的 ISO 文件名
+          path: /home/remastersys/remastersys/custom.iso  # 假设 ISO 文件生成路径
