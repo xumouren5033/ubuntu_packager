@@ -35,7 +35,7 @@ jobs:
           echo "deb http://archive.ubuntu.com/ubuntu  jammy-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
           # 安装必要的包
-          sudo chroot chroot /bin/bash -c "apt update && apt install --reinstall start-stop-daemon && apt install -y linux-image-generic live-boot systemd-sysv"
+          sudo chroot chroot /bin/bash -c "apt update && apt install -y linux-image-generic live-boot systemd-sysv"
 
           # 解除挂载
           sudo umount chroot/dev
