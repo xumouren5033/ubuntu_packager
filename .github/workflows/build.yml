@@ -44,7 +44,7 @@ jobs:
 
           # 创建 squashfs 文件系统
           sudo mksquashfs chroot filesystem.squashfs -comp xz
-
+          ls
           # 创建 ISO 文件
           sudo xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes \
             -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 \
