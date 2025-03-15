@@ -1,12 +1,9 @@
 name: Build LiveCD
-
 on: 
   push:
-
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -14,28 +11,29 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso coreutils
+          sudo apt-get install -y debootstrap squashfs-tools xorriso syslinux-common
 
       - name: Create LiveCD
         run: |
+          set -e  # 启用错误处理
           # 创建工作目录
           mkdir -p ~/livecd
           cd ~/livecd
 
           # 使用 debootstrap 创建基础系统
-          sudo debootstrap --arch=amd64 jammy chroot http://archive.ubuntu.com/ubuntu/ 
+          sudo debootstrap --arch=amd64 jamme chroot http://archive.ubuntu.com/ubuntu/
 
           # 挂载必要的文件系统
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          # 进入 chroot 环境并启用 universe 软件源
-          echo "deb http://archive.ubuntu.com/ubuntu  jammy universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb http://archive.ubuntu.com/ubuntu  jammy-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          # 启用 universe 软件源
+          echo "deb http://archive.ubuntu.com/ubuntu noble universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu noble-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          # 安装必要的包
-          sudo chroot chroot /bin/bash -c "apt update && apt install -y linux-image-generic live-boot systemd-sysv"
+          # 进入 chroot 环境并安装必要的包
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv"
 
           # 解除挂载
           sudo umount chroot/dev
@@ -44,7 +42,12 @@ jobs:
 
           # 创建 squashfs 文件系统
           sudo mksquashfs chroot filesystem.squashfs -comp xz
-          ls
+
+          # 创建 binary 目录并复制引导文件
+          mkdir -p binary/isolinux
+          cp /usr/lib/ISOLINUX/isolinux.bin binary/isolinux/
+          cp /usr/lib/syslinux/modules/bios/ldlinux.c32 binary/isolinux/
+
           # 创建 ISO 文件
           sudo xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes \
             -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 \
@@ -57,3 +60,7 @@ jobs:
         with:
           name: Ubuntu LiveCD ISO
           path: ~/livecd/ubuntu-livecd.iso
+
+      - name: Clean up
+        run: |
+          sudo rm -rf ~/livecd
