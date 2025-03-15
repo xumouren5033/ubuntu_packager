@@ -27,7 +27,7 @@ jobs:
       - name: Configure live-build
         run: |
           cd /live
-          lb config \
+          sudo lb config \
             --architectures amd64 \
             --linux-flavours generic \
             --binary-images iso-hybrid \
@@ -40,7 +40,7 @@ jobs:
       - name: Build LiveCD Image
         run: |
           cd /live
-          lb build
+          sudo lb build
 
       - name: Upload LiveCD Image as Artifact
         uses: actions/upload-artifact@v4
