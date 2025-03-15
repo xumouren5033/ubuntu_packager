@@ -22,7 +22,7 @@ jobs:
           sudo apt-get install -y live-build xorriso
 
       - name: Create working directory
-        run: mkdir -p /live
+        run: sudo mkdir -p /live
 
       - name: Configure live-build
         run: |
