@@ -1,5 +1,3 @@
-
-
 name: Build LiveCD
 
 on: 
@@ -7,11 +5,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -30,13 +28,19 @@ jobs:
           # 挂载必要的文件系统
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
+          sudo mount --bind /proc chroot/proc
 
-          # 进入 chroot 环境并安装必要的包
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot"
+          # 进入 chroot 环境并启用 universe 软件源
+          echo "deb http://archive.ubuntu.com/ubuntu jammy universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu jammy-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+
+          # 安装必要的包
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv"
 
           # 解除挂载
           sudo umount chroot/dev
           sudo umount chroot/run
+          sudo umount chroot/proc
 
           # 创建 squashfs 文件系统
           sudo mksquashfs chroot filesystem.squashfs -comp xz
@@ -49,7 +53,7 @@ jobs:
             -o ubuntu-livecd.iso binary
 
       - name: Upload ISO as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: Ubuntu LiveCD ISO
           path: ~/livecd/ubuntu-livecd.iso
