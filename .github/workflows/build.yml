@@ -1,0 +1,30 @@
+name: Build and Publish LiveCD Image
+
+on:
+  push:
+    branches:
+      - main  # 触发分支
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  build-livecd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build LiveCD Image
+        run: |
+          docker build -t livecd-builder .
+          docker run --name livecd-builder livecd-builder
+          docker cp livecd-builder:/live/binary.hybrid.iso ./ubuntu-live.iso
+
+      - name: Upload LiveCD ISO as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-live.iso
+          path: ./ubuntu-live.iso
