@@ -36,7 +36,8 @@ jobs:
             --iso-publisher "Your Name" \
             --iso-volume "Ubuntu Live Volume" \
             --debian-installer live \
-            --distribution jammy
+            --distribution jammy \
+            --debootstrap-options "--variant=minbase"
 
       - name: Build LiveCD Image
         run: |
