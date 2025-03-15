@@ -23,18 +23,18 @@ jobs:
           cd ~/livecd
 
           # 使用 debootstrap 创建基础系统
-          sudo debootstrap --arch=amd64 jammy chroot http://archive.ubuntu.com/ubuntu/
+          sudo debootstrap --arch=amd64 noble chroot http://archive.ubuntu.com/ubuntu/
 
           # 挂载必要的文件系统
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          # 进入 chroot 环境并启用 universe 软件源
-          echo "deb http://archive.ubuntu.com/ubuntu jammy universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb http://archive.ubuntu.com/ubuntu jammy-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          # 启用 universe 软件源
+          echo "deb http://archive.ubuntu.com/ubuntu noble universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu noble-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          # 安装必要的包
+          # 进入 chroot 环境并安装必要的包
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv"
 
           # 解除挂载
@@ -45,12 +45,17 @@ jobs:
           # 创建 squashfs 文件系统
           sudo mksquashfs chroot filesystem.squashfs -comp xz
 
+          # 创建 binary 目录并复制必要的启动文件
+          mkdir -p ~/livecd/binary/isolinux
+          cp /usr/lib/ISOLINUX/isolinux.bin ~/livecd/binary/isolinux/
+          cp /usr/lib/ISOLINUX/boot.cat ~/livecd/binary/isolinux/
+
           # 创建 ISO 文件
-          sudo xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes \
+          sudo xorriso -as mkisofs -r -J -joliet-long \
             -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 \
             -A "Ubuntu LiveCD" -b isolinux/isolinux.bin -c isolinux/boot.cat \
             -no-emul-boot -boot-load-size 4 -boot-info-table \
-            -o ubuntu-livecd.iso binary
+            -o ubuntu-livecd.iso ~/livecd/binary
 
       - name: Upload ISO as artifact
         uses: actions/upload-artifact@v4
