@@ -80,7 +80,8 @@ jobs:
 
       - name: Create .gz file
         run: |
-          gzip -c ~/livecd/ubuntu-livecd.iso > ~/livecd/ubuntu-livecd.iso.gz
+          gzip -k ~/livecd/ubuntu-livecd.iso
+          ls
           # 替换 ./path/to/your/files 为需要打包的文件路径
 
       - name: Create Release
@@ -100,7 +101,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ~/livecd/ubuntu-livecd.iso.gz
+          asset_path: ./ubuntu-livecd.iso.gz
           asset_name: ubuntu-livecd.iso.gz
           asset_content_type: application/gzip
       - name: 清理工作目录
