@@ -89,7 +89,7 @@ jobs:
           name: ${{ env.VERSION }}  # Release 名称
           body: "自动生成的 Release"  # Release 描述
           files: |
-            ~/livecd/ubuntu-livecd.iso.gz  # 指定上传的文件路径
+            /home/runner/livecd/ubuntu-livecd.iso.gz
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
       - name: 清理工作目录
         run: |
