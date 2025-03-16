@@ -80,7 +80,7 @@ jobs:
 
       - name: Create .gz file
         run: |
-          gzip -k ~/livecd/ubuntu-livecd.iso > ~/livecd/ubuntu-livecd.iso.gz
+          gzip -c ~/livecd/ubuntu-livecd.iso > ~/livecd/ubuntu-livecd.iso.gz
           # 替换 ./path/to/your/files 为需要打包的文件路径
 
       - name: Create Release
