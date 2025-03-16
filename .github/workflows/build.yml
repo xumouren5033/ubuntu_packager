@@ -81,6 +81,7 @@ jobs:
       - name: Create .gz file
         run: |
           gzip -k ~/livecd/ubuntu-livecd.iso
+          pwd
           ls
           # 替换 ./path/to/your/files 为需要打包的文件路径
 
