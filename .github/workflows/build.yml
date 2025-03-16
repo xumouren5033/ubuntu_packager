@@ -81,15 +81,18 @@ jobs:
       - name: Create .gz file
         run: |
           gzip -8 -k ~/livecd/ubuntu-livecd.iso
-          7z a -mx=9 ~/livecd/ubuntu-livecd.7z ~/livecd/ubuntu-livecd.iso.gz
+      - name: Split large file
+        run: |
+          # 假设需要分割的文件是 largefile.zip
+          split -b 1G ~/livecd/ubuntu-livecd.iso.gz ./part_  # 按 1GB 分割文件
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION }}  # 使用推送的标签名
           name: ${{ env.VERSION }}  # Release 名称
-          body: "自动生成的 Release"  # Release 描述
+          body: "#请先合并下载的所有文件再使用"  # Release 描述
           files: |
-            /home/runner/livecd/ubuntu-livecd.7z
+            ./part_*
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
       - name: 清理工作目录
         run: |
