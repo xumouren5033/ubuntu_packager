@@ -81,30 +81,16 @@ jobs:
       - name: Create .gz file
         run: |
           gzip -k ~/livecd/ubuntu-livecd.iso
-          pwd
-          ls
-          # 替换 ./path/to/your/files 为需要打包的文件路径
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 创建并上传 Release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
-          draft: false
-          prerelease: false
-
-      - name: Upload .gz file to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ubuntu-livecd.iso.gz
-          asset_name: ubuntu-livecd.iso.gz
-          asset_content_type: application/gzip
+          tag_name: ${{ env.VERSION }}  # 使用推送的标签名
+          name: ${{ env.VERSION }}  # Release 名称
+          body: "自动生成的 Release"  # Release 描述
+          files: |
+            ~/livecd/ubuntu-livecd.iso.gz  # 指定上传的文件路径
+          token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
       - name: 清理工作目录
         run: |
           sudo rm -rf ~/livecd
