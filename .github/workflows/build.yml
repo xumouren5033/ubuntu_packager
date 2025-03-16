@@ -26,7 +26,7 @@ jobs:
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools p7zip-full
 
       - name: 创建 LiveCD
         run: |
@@ -81,7 +81,7 @@ jobs:
       - name: Create .gz file
         run: |
           gzip -8 -k ~/livecd/ubuntu-livecd.iso
-          
+          7z a -mx=9 ~/livecd/ubuntu-livecd.7z ~/livecd/ubuntu-livecd.iso.gz
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
         with:
@@ -89,7 +89,7 @@ jobs:
           name: ${{ env.VERSION }}  # Release 名称
           body: "自动生成的 Release"  # Release 描述
           files: |
-            /home/runner/livecd/ubuntu-livecd.iso.gz
+            /home/runner/livecd/ubuntu-livecd.7z
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
       - name: 清理工作目录
         run: |
