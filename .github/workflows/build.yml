@@ -74,12 +74,35 @@ jobs:
           # 创建 ISO 文件
           sudo grub-mkrescue -o ubuntu-livecd.iso ~/livecd
 
-      - name: 上传 ISO 文件
-        uses: actions/upload-artifact@v4
-        with:
-          name: Ubuntu-LiveCD-${{ github.event.inputs.ubuntu_version }}.iso
-          path: ~/livecd/ubuntu-livecd.iso
+      
+      - name: Generate Version Number
+        run: echo "VERSION=v${{ github.run_number }}" >> $GITHUB_ENV
 
+      - name: Create .gz file
+        run: |
+          gzip -k ~/livecd/ubuntu-livecd.iso
+          # 替换 ./path/to/your/files 为需要打包的文件路径
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload .gz file to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ~/livecd/ubuntu-livecd.iso.gz
+          asset_name: ubuntu-livecd.iso.gz
+          asset_content_type: application/gzip
       - name: 清理工作目录
         run: |
           sudo rm -rf ~/livecd
