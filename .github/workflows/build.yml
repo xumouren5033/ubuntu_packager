@@ -15,6 +15,13 @@ on:
         required: false
         default: ''
         type: string
+      arch:
+        description: '选择系统架构'
+        required: true
+        default: 'amd64'
+        type: choice
+        options:
+          - amd64
 
 jobs:
   build:
@@ -30,48 +37,41 @@ jobs:
 
       - name: 创建 LiveCD
         run: |
-          set -e  # 启用错误处理
-          # 创建工作目录
+          set -e
           mkdir -p ~/livecd
           cd ~/livecd
+          sudo debootstrap --arch=${{ github.event.inputs.arch }} ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
 
-          # 使用 debootstrap 创建基础系统
-          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
-
-          # 挂载必要的文件系统
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          # 启用 universe 软件源
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          # 进入 chroot 环境并安装必要的包
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv ${{ github.event.inputs.packages }}"
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv os-prober ${{ github.event.inputs.packages }}"
 
-          # 解除挂载
+          echo "GRUB_DISABLE_OS_PROBER=false" | sudo tee -a chroot/etc/default/grub
+          sudo chroot chroot /bin/bash -c "update-grub"
+
           sudo umount chroot/dev
           sudo umount chroot/run
           sudo umount chroot/proc
 
-          # 创建 squashfs 文件系统
           sudo mksquashfs chroot filesystem.squashfs -comp xz
 
-          # 创建 GRUB 配置文件
           mkdir -p ~/livecd/boot/grub
           cat <<EOF > ~/livecd/boot/grub/grub.cfg
           set timeout=5
           set default=0
 
           menuentry "Ubuntu LiveCD" {
-              set root=(hd0,msdos1)
+              set root=(cd)
               linux /vmlinuz boot=live quiet splash
               initrd /initrd.img
           }
           EOF
 
-          # 创建 ISO 文件
           sudo grub-mkrescue -o ubuntu-livecd.iso ~/livecd
 
       
