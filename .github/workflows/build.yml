@@ -27,6 +27,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: 清理磁盘空间
+        uses: JLumbroso/free-disk-space@v1
       - name: 检出仓库
         uses: actions/checkout@v4
 
@@ -75,13 +77,13 @@ jobs:
           sudo grub-mkrescue -o ubuntu-livecd.iso ~/livecd
 
       
-      - name: Generate Version Number
+      - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}" >> $GITHUB_ENV
 
-      - name: Create .gz file
+      - name: 压缩
         run: |
           gzip -8 -k ~/livecd/ubuntu-livecd.iso
-      - name: Split large file
+      - name: 分割文件
         run: |
           # 假设需要分割的文件是 largefile.zip
           split -b 1G ~/livecd/ubuntu-livecd.iso.gz ./part_  # 按 1GB 分割文件
