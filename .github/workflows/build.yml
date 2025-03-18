@@ -75,10 +75,10 @@ jobs:
           set timeout=5
           set default=0
 
-          menuentry "Ubuntu LiveCD" {
-              set root=(cd)
-              linux /vmlinuz boot=live quiet splash
-              initrd /initrd.img
+          menuentry "Auto-Detect Linux Partition" {
+            search --file --set=root /vmlinuz
+            linux /vmlinuz root=${root} ro quiet splash
+            initrd /initrd.img
           }
           EOF
 
