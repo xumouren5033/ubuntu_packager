@@ -79,7 +79,7 @@ jobs:
           }
           EOF
 
-          sudo grub-mkrescue -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb
+          sudo grub-mkrescue -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb -volid "Ubuntu USB" -boot-info-table -udf
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
 
