@@ -101,7 +101,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}  # 使用推送的标签名
           name: ${{ env.VERSION }}  # Release 名称
-          body: "#请先合并下载的所有文件再使用"  # Release 描述
+          body: "请先合并下载的所有文件再使用，root密码为1234"  # Release 描述
           files: |
             ./part_*
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
