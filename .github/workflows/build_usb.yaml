@@ -20,11 +20,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      #- name: 清理磁盘空间
-      #  uses: jlumbroso/free-disk-space@main
-      #  with:
-      #    tool-cache: false
-      #    android: true
+      - name: 清理磁盘空间
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
 
       - name: 检出仓库
         uses: actions/checkout@v4
@@ -34,18 +34,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools genisoimage grub-pc-bin
 
-      - name: 查找 eltorito.img 文件路径
-        id: find_eltorito
-        run: |
-          ELTORITO_PATH=$(dpkg -L grub-pc-bin | grep eltorito.img)
-          # 如果未找到文件，输出错误信息并退出
-          if [ -z "$ELTORITO_PATH" ]; then
-            echo "未找到 eltorito.img 文件，请检查 grub-pc-bin 包是否正确安装！"
-            exit 1
-          fi
-          # 将路径写入环境变量
-          echo "ELTORITO_PATH=${ELTORITO_PATH}" >> $GITHUB_ENV
-          echo "找到的 eltorito.img 路径为: ${ELTORITO_PATH}"
+      
       - name: 创建基础系统
         run: |
           set -e
