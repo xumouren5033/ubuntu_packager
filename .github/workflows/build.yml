@@ -69,7 +69,7 @@ jobs:
           sudo umount chroot/proc
 
           sudo mksquashfs chroot filesystem.squashfs -comp xz
-
+          sudo rm -rf chroot
           mkdir -p ~/livecd/boot/grub
           cat <<EOF > ~/livecd/boot/grub/grub.cfg
           set timeout=5
