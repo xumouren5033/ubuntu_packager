@@ -32,7 +32,7 @@ jobs:
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-efi-amd64 mtools
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-efi-amd64 mtools grub-common
 
       - name: 创建基础系统
         run: |
@@ -44,7 +44,6 @@ jobs:
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
-          
 
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
@@ -55,15 +54,6 @@ jobs:
           # 设置 root 用户密码
           sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
 
-          sudo mkdir -p chroot/boot/efi
-          sudo dd if=/dev/zero of=chroot/boot/efi.img bs=1M count=100  # 创建一个 100MB 的虚拟分区
-          sudo mkfs.fat -F32 chroot/boot/efi.img
-          sudo mount -o loop chroot/boot/efi.img chroot/boot/efi
-      
-          
-          sudo chroot chroot /bin/bash -c "mkdir -p /boot/efi/EFI/BOOT"
-          sudo chroot chroot /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck --force"
-          
           # 创建 GRUB 配置文件
           sudo chroot chroot /bin/bash -c "cat <<EOF > /boot/grub/grub.cfg
           set timeout=5
@@ -81,16 +71,11 @@ jobs:
           sudo umount chroot/dev
           sudo umount chroot/run
           sudo umount chroot/proc
-          sudo umount chroot/boot/efi
 
       - name: 创建可启动镜像
         run: |
-          sudo mke2fs -F -t ext4 -L "Ubuntu USB" -d ~/ubuntu-usb/chroot ~/ubuntu-usb/ubuntu-usb.img 4G
-
-          # 使用 xorriso 生成仅支持 UEFI 的 ISO 镜像
-          sudo xorriso -as mkisofs -J -R -joliet-long -udf \
-          -e boot/efi/EFI/BOOT/bootx64.efi -no-emul-boot \
-          -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb
+          cd ~/ubuntu-usb
+          sudo grub-mkrescue -o ubuntu-usb.iso chroot -- -udf -J -R -joliet-long
 
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
@@ -101,7 +86,7 @@ jobs:
 
       - name: 分割文件
         run: |
-          split -b 1G ~/ubuntu-usb/ubuntu-usb.iso.gz ./part_  # 按 1GB 分割文件
+          split -b 4G ~/ubuntu-usb/ubuntu-usb.iso.gz ./part_  # 按 4GB 分割文件
 
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
