@@ -1,0 +1,56 @@
+name: Build LiveCD
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-livecd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Clean up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /tmp/*
+          sudo rm -rf /var/tmp/*
+
+      - name: Set up dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build
+
+      - name: Create build directory
+        run: |
+          mkdir /live
+          cd /live
+          lb config
+
+      - name: Build LiveCD
+        run: |
+          cd /live
+          lb build
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: LiveCD Build ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload LiveCD ISO to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: /live/live-image-*.iso
+          asset_name: livecd-${{ github.run_number }}.iso
+          asset_content_type: application/octet-stream
