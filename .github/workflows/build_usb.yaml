@@ -44,11 +44,7 @@ jobs:
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
-          # 创建必要的目录结构
-          sudo mkdir -p chroot/sys/firmware/efi/efivars
-
-          # 挂载 efivarfs
-          sudo mount -t efivarfs efivarfs chroot/sys/firmware/efi/efivars
+          
 
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
@@ -80,7 +76,6 @@ jobs:
           sudo umount chroot/dev
           sudo umount chroot/run
           sudo umount chroot/proc
-          sudo umount chroot/sys/firmware/efi/efivars  # 卸载 efivarfs
 
       - name: 创建可启动镜像
         run: |
