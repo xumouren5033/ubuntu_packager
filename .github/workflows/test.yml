@@ -21,12 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Clean up disk space
-        run: |
-          sudo apt-get clean
-          sudo rm -rf /var/lib/apt/lists/*
-          sudo rm -rf /tmp/*
-          sudo rm -rf /var/tmp/*
+      
 
       - name: Set up dependencies
         run: |
@@ -35,14 +30,14 @@ jobs:
 
       - name: Create build directory
         run: |
-          mkdir /live
+          sudo mkdir /live
           cd /live
-          lb config
+          sudo lb config
 
       - name: Build LiveCD
         run: |
           cd /live
-          lb build
+          sudo lb build
 
       - name: Create Release
         id: create_release
