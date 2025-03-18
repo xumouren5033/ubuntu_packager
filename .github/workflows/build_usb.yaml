@@ -39,6 +39,7 @@ jobs:
         run: |
           ELTORITO_PATH=$(sudo find /usr/lib/grub /boot -name eltorito.img)
           echo "ELTORITO_PATH=${ELTORITO_PATH}" >> $GITHUB_ENV
+          echo ${ELTORITO_PATH}
 
       - name: 创建基础系统
         run: |
