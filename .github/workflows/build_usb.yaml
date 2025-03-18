@@ -75,7 +75,7 @@ jobs:
       - name: 创建可启动镜像
         run: |
           cd ~/ubuntu-usb
-          sudo grub-mkrescue -o ubuntu-usb.iso chroot -- -udf -J -R -joliet-long
+          sudo grub-mkrescue -o ubuntu-usb.iso ~/ubuntu-usb/chroot -- --as mkisofs -J -R -joliet-long -udf
 
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
