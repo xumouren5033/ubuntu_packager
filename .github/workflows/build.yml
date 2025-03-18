@@ -64,9 +64,9 @@ jobs:
           echo "GRUB_DISABLE_OS_PROBER=false" | sudo tee -a chroot/etc/default/grub
           sudo chroot chroot /bin/bash -c "update-grub"
           sudo pkill -9 -f "./chroot" || true
-          sudo umount chroot/dev
-          sudo umount chroot/run
-          sudo umount chroot/proc
+          sudo umount -l chroot/dev
+          sudo umount -l chroot/run
+          sudo umount -l chroot/proc
 
           sudo mksquashfs chroot filesystem.squashfs -comp xz
           sudo rm -rf chroot
