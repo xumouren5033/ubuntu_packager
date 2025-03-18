@@ -55,10 +55,14 @@ jobs:
           # 设置 root 用户密码
           sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
 
-          # 配置 GRUB UEFI
+          # 创建模拟的 EFI 系统分区
+          sudo mkdir -p chroot/boot/efi
+          sudo mkfs.fat -F32 chroot/boot/efi
+      
+          
           sudo chroot chroot /bin/bash -c "mkdir -p /boot/efi/EFI/BOOT"
-          sudo chroot chroot /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck"
-
+          sudo chroot chroot /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck --force"
+          sudo chroot chroot /bin/bash -c "cp /usr/lib/grub/x86_64-efi/grubx64.efi /boot/efi/EFI/BOOT/BOOTX64.EFI"
           # 创建 GRUB 配置文件
           sudo chroot chroot /bin/bash -c "cat <<EOF > /boot/grub/grub.cfg
           set timeout=5
