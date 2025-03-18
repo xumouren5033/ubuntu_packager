@@ -1,4 +1,4 @@
-name: 构建可写入 U 盘的 Ubuntu 系统（自动识别盘符）
+name: 构建可写入 U 盘的 Ubuntu 系统（仅支持 UEFI 启动）
 on:
   workflow_dispatch:
     inputs:
@@ -32,9 +32,8 @@ jobs:
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools genisoimage grub-pc-bin
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-efi-amd64 mtools
 
-      
       - name: 创建基础系统
         run: |
           set -e
@@ -45,44 +44,47 @@ jobs:
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
+          sudo mount -t efivarfs efivarfs chroot/sys/firmware/efi/efivars  # 挂载 efivarfs
 
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic systemd-sysv ${{ github.event.inputs.packages }}"
+          # 安装必要的软件包
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic systemd-sysv grub-efi-amd64 ${{ github.event.inputs.packages }}"
 
+          # 设置 root 用户密码
           sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
 
-          sudo umount chroot/dev
-          sudo umount chroot/run
-          sudo umount chroot/proc
-
-      - name: 创建可启动镜像
-        run: |
-          sudo mke2fs -F -t ext4 -L "Ubuntu USB" -d ~/ubuntu-usb/chroot ~/ubuntu-usb/ubuntu-usb.img 4G
-
-          # 创建 UEFI 启动目录并复制必要的文件
-          mkdir -p ~/ubuntu-usb/EFI/BOOT
-          cp /usr/lib/grub/x86_64-efi/grubx64.efi ~/ubuntu-usb/EFI/BOOT/BOOTX64.EFI
+          # 配置 GRUB UEFI
+          sudo chroot chroot /bin/bash -c "mkdir -p /boot/efi/EFI/BOOT"
+          sudo chroot chroot /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck"
 
           # 创建 GRUB 配置文件
-          mkdir -p ~/ubuntu-usb/boot/grub
-          cat <<EOF > ~/ubuntu-usb/boot/grub/grub.cfg
+          sudo chroot chroot /bin/bash -c "cat <<EOF > /boot/grub/grub.cfg
           set timeout=5
           set default=0
 
           # 自动搜索包含 vmlinuz 的设备
           search --set=root --file /boot/vmlinuz
 
-          menuentry "Ubuntu" {
-              linux /boot/vmlinuz-$(ls ~/ubuntu-usb/chroot/boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=${root} ro quiet splash
-              initrd /boot/initrd.img-$(ls ~/ubuntu-usb/chroot/boot/initrd.img-* | sed 's/.*initrd.img-//')
+          menuentry 'Ubuntu on USB' {
+              linux /boot/vmlinuz-$(ls /boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=\${root} ro quiet splash
+              initrd /boot/initrd.img-$(ls /boot/initrd.img-* | sed 's/.*initrd.img-//')
           }
-          EOF
+          EOF"
+
+          sudo umount chroot/dev
+          sudo umount chroot/run
+          sudo umount chroot/proc
+          sudo umount chroot/sys/firmware/efi/efivars  # 卸载 efivarfs
+
+      - name: 创建可启动镜像
+        run: |
+          sudo mke2fs -F -t ext4 -L "Ubuntu USB" -d ~/ubuntu-usb/chroot ~/ubuntu-usb/ubuntu-usb.img 4G
 
           # 使用 xorriso 生成仅支持 UEFI 的 ISO 镜像
           sudo xorriso -as mkisofs -J -R -joliet-long -udf \
-          -e EFI/BOOT/BOOTX64.EFI -no-emul-boot \
+          -e boot/efi/EFI/BOOT/bootx64.efi -no-emul-boot \
           -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb
 
       - name: 设置版本号
