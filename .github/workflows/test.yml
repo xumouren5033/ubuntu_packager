@@ -23,11 +23,7 @@ jobs:
         run: |
           sudo mkdir /live
           cd /live
-          sudo lb config \
-            --mirror-bootstrap http://archive.ubuntu.com/ubuntu \
-            --mirror-binary http://archive.ubuntu.com/ubuntu \
-            --mirror-chroot http://archive.ubuntu.com/ubuntu \
-            --suite jammy
+          lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
 
       
       - name: Build LiveCD
