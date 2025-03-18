@@ -23,20 +23,22 @@ jobs:
       - name: 清理磁盘空间
         uses: jlumbroso/free-disk-space@main
         with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
           tool-cache: false
-        
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
           android: true
+
       - name: 检出仓库
         uses: actions/checkout@v4
 
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools genisoimage
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools genisoimage grub-pc-bin
+
+      - name: 查找 eltorito.img 文件
+        id: find_eltorito
+        run: |
+          ELTORITO_PATH=$(find /usr/lib/grub /boot -name eltorito.img)
+          echo "ELTORITO_PATH=${ELTORITO_PATH}" >> $GITHUB_ENV
 
       - name: 创建基础系统
         run: |
@@ -54,7 +56,6 @@ jobs:
 
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic systemd-sysv ${{ github.event.inputs.packages }}"
 
-          # 设置 root 用户密码为 1234
           sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
 
           sudo umount chroot/dev
@@ -79,17 +80,22 @@ jobs:
           }
           EOF
 
-          sudo grub-mkrescue -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb -volid "Ubuntu USB" -boot-info-table -udf
+          # 使用 xorriso 替代 grub-mkrescue
+          sudo xorriso -as mkisofs -J -R -joliet-long -udf -boot-load-size 4 \
+          -b ${{ env.ELTORITO_PATH }} -no-emul-boot -boot-info-table \
+          -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb
+
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
 
       - name: 压缩
         run: |
           gzip -8 -k ~/ubuntu-usb/ubuntu-usb.iso
+
       - name: 分割文件
         run: |
-          # 假设需要分割的文件是 largefile.zip
           split -b 1G ~/ubuntu-usb/ubuntu-usb.iso.gz ./part_  # 按 1GB 分割文件
+
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
         with:
@@ -99,7 +105,7 @@ jobs:
           files: |
             ./part_*
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
-      
+
       - name: 清理工作目录
         run: |
           sudo rm -rf ~/ubuntu-usb
