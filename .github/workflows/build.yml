@@ -63,6 +63,7 @@ jobs:
 
           echo "GRUB_DISABLE_OS_PROBER=false" | sudo tee -a chroot/etc/default/grub
           sudo chroot chroot /bin/bash -c "update-grub"
+          sudo chroot chroot /bin/bash -c "echo '1234\n1234\n' | passwd root"
           sudo pkill -9 -f "./chroot" || true
           sudo umount -l chroot/dev
           sudo umount -l chroot/run
