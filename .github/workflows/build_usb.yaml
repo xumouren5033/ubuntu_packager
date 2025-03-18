@@ -1,24 +1,21 @@
-name: 构建可写入 U 盘的 Ubuntu 系统（仅支持 UEFI 启动）
+name: 构建 Ubuntu 系统镜像
+
 on:
   workflow_dispatch:
     inputs:
       ubuntu_version:
         description: '选择 Ubuntu 版本（例如 jammy 或 noble）'
         required: true
-        default: 'noble'
+        default: 'jammy'
         type: choice
         options:
           - jammy
           - noble
-      packages:
-        description: '预装软件包列表（每个软件包的名字之间以空格分隔）'
-        required: false
-        default: ''
-        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: 清理磁盘空间
         uses: jlumbroso/free-disk-space@main
@@ -32,7 +29,7 @@ jobs:
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-efi-amd64 mtools grub-common
+          sudo apt-get install -y debootstrap xorriso grub-efi-amd64 mtools e2fsprogs
 
       - name: 创建基础系统
         run: |
@@ -48,35 +45,33 @@ jobs:
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          # 安装必要的软件包
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic systemd-sysv grub-efi-amd64 ${{ github.event.inputs.packages }}"
-
-          # 设置 root 用户密码
-          sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
-
-          # 创建 GRUB 配置文件
-          sudo chroot chroot /bin/bash -c "cat <<EOF > /boot/grub/grub.cfg
-          set timeout=5
-          set default=0
-
-          # 自动搜索包含 vmlinuz 的设备
-          search --set=root --file /boot/vmlinuz
-
-          menuentry 'Ubuntu on USB' {
-              linux /boot/vmlinuz-$(ls /boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=\${root} ro quiet splash
-              initrd /boot/initrd.img-$(ls /boot/initrd.img-* | sed 's/.*initrd.img-//')
-          }
-          EOF"
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y ubuntu-desktop grub-efi-amd64"
 
           sudo umount chroot/dev
           sudo umount chroot/run
           sudo umount chroot/proc
 
-      - name: 创建可启动镜像
+      - name: 创建 ext4 文件系统镜像
         run: |
           cd ~/ubuntu-usb
-          sudo grub-mkrescue -o ubuntu-usb.iso ~/ubuntu-usb/chroot -- --as mkisofs -J -R -joliet-long -udf
+          sudo dd if=/dev/zero of=ext4.img bs=1M count=4096  # 创建一个 4GB 的 ext4 镜像文件
+          sudo mkfs.ext4 -F -L "Ubuntu USB" ext4.img  # 格式化为 ext4 文件系统
+          sudo mkdir -p ext4_mount  # 创建挂载点
+          sudo mount -o loop ext4.img ext4_mount  # 挂载 ext4 镜像文件
 
+      - name: 将 chroot 内容复制到 ext4 文件系统
+        run: |
+          cd ~/ubuntu-usb
+          sudo cp -a chroot/. ext4_mount/  # 将 chroot 内容复制到 ext4 文件系统
+          sudo umount ext4_mount  # 卸载 ext4 镜像文件
+          sudo rm -rf chroot  # 删除 chroot 目录（可选）
+
+      - name: 创建可启动 ISO 镜像
+        run: |
+          cd ~/ubuntu-usb
+          sudo grub-mkrescue -o ubuntu-usb.iso . -- --as mkisofs -J -R -joliet-long
+
+      
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
 
