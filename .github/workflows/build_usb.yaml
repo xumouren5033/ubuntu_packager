@@ -55,9 +55,10 @@ jobs:
           # 设置 root 用户密码
           sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
 
-          # 创建模拟的 EFI 系统分区
           sudo mkdir -p chroot/boot/efi
-          sudo mkfs.fat -F32 chroot/boot/efi
+          sudo dd if=/dev/zero of=chroot/boot/efi.img bs=1M count=100  # 创建一个 100MB 的虚拟分区
+          sudo mkfs.fat -F32 chroot/boot/efi.img
+          sudo mount -o loop chroot/boot/efi.img chroot/boot/efi
       
           
           sudo chroot chroot /bin/bash -c "mkdir -p /boot/efi/EFI/BOOT"
@@ -80,6 +81,7 @@ jobs:
           sudo umount chroot/dev
           sudo umount chroot/run
           sudo umount chroot/proc
+          sudo umount chroot/boot/efi
 
       - name: 创建可启动镜像
         run: |
