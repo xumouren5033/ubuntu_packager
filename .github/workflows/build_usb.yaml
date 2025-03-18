@@ -100,7 +100,7 @@ jobs:
 
       - name: 分割文件
         run: |
-          split -b 4G ~/ubuntu-usb/ubuntu-usb.iso.gz ./part_  # 按 4GB 分割文件
+          split -b 1G ~/ubuntu-usb/ubuntu-usb.iso.gz ./part_  # 按 4GB 分割文件
 
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
