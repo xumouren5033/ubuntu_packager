@@ -1,7 +1,7 @@
 name: Build LiveCD
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   build-livecd:
@@ -23,9 +23,14 @@ jobs:
         run: |
           sudo mkdir /live
           cd /live
-          sudo lb config
-          sudo sed -i 's|SUITE=.*|SUITE="focal"|' config/bootstrap
+          name: Live Build Configuration
+          sudo lb config \
+            --mirror-bootstrap http://archive.ubuntu.com/ubuntu \
+            --mirror-binary http://archive.ubuntu.com/ubuntu \
+            --mirror-chroot http://archive.ubuntu.com/ubuntu \
+            --suite focal  # 设置为 Ubuntu 20.04 LTS
 
+      
       - name: Build LiveCD
         run: |
           cd /live
