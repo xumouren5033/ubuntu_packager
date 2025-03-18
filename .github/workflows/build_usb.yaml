@@ -65,7 +65,22 @@ jobs:
           sudo cp -a chroot/. ext4_mount/  # 将 chroot 内容复制到 ext4 文件系统
           sudo umount ext4_mount  # 卸载 ext4 镜像文件
           sudo rm -rf chroot  # 删除 chroot 目录（可选）
+      - name: 手动编辑 GRUB2 配置文件
+        run: |
+          cd ~/ubuntu-usb
+          sudo mkdir -p ext4_mount/boot/grub
+          sudo tee ext4_mount/boot/grub/grub.cfg <<EOF
+          set timeout=5
+          set default=0
 
+          # 自动搜索包含 vmlinuz 的设备
+          search --set=root --file /boot/vmlinuz
+
+          menuentry 'Ubuntu on USB' {
+              linux /boot/vmlinuz-$(ls ext4_mount/boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=\${root} ro quiet splash
+              initrd /boot/initrd.img-$(ls ext4_mount/boot/initrd.img-* | sed 's/.*initrd.img-//')
+          }
+          EOF
       - name: 创建可启动 ISO 镜像
         run: |
           cd ~/ubuntu-usb
