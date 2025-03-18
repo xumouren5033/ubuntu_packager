@@ -72,6 +72,11 @@ jobs:
         run: |
           sudo mke2fs -F -t ext4 -L "Ubuntu USB" -d ~/ubuntu-usb/chroot ~/ubuntu-usb/ubuntu-usb.img 4G
 
+          # 创建 UEFI 启动目录并复制必要的文件
+          mkdir -p ~/ubuntu-usb/EFI/BOOT
+          cp /usr/lib/grub/x86_64-efi/grubx64.efi ~/ubuntu-usb/EFI/BOOT/BOOTX64.EFI
+
+          # 创建 GRUB 配置文件
           mkdir -p ~/ubuntu-usb/boot/grub
           cat <<EOF > ~/ubuntu-usb/boot/grub/grub.cfg
           set timeout=5
@@ -80,15 +85,15 @@ jobs:
           # 自动搜索包含 vmlinuz 的设备
           search --set=root --file /boot/vmlinuz
 
-          menuentry "Ubuntu on USB" {
+          menuentry "Ubuntu" {
               linux /boot/vmlinuz-$(ls ~/ubuntu-usb/chroot/boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=${root} ro quiet splash
               initrd /boot/initrd.img-$(ls ~/ubuntu-usb/chroot/boot/initrd.img-* | sed 's/.*initrd.img-//')
           }
           EOF
 
-          # 使用 xorriso 替代 grub-mkrescue
-          sudo xorriso -as mkisofs -J -R -joliet-long -udf -boot-load-size 4 \
-          -b ${{ env.ELTORITO_PATH }} -no-emul-boot -boot-info-table \
+          # 使用 xorriso 生成仅支持 UEFI 的 ISO 镜像
+          sudo xorriso -as mkisofs -J -R -joliet-long -udf \
+          -e EFI/BOOT/BOOTX64.EFI -no-emul-boot \
           -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb
 
       - name: 设置版本号
