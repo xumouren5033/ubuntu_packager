@@ -36,7 +36,7 @@ jobs:
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-common grub-efi-amd64 mtools libisoburn dosfstools genisoimage
 
       - name: 创建基础系统
         run: |
