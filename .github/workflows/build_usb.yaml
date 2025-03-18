@@ -1,0 +1,76 @@
+name: 构建可写入 U 盘的 Ubuntu 系统（自动识别盘符）
+on:
+  workflow_dispatch:
+    inputs:
+      ubuntu_version:
+        description: '选择 Ubuntu 版本（例如 jammy 或 noble）'
+        required: true
+        default: 'noble'
+        type: choice
+        options:
+          - jammy
+          - noble
+      packages:
+        description: '预装软件包列表（每个软件包的名字之间以空格分隔）'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap xorriso grub-common grub-efi-amd64 mtools
+
+      - name: 创建基础系统
+        run: |
+          set -e
+          mkdir -p ~/ubuntu-usb
+          cd ~/ubuntu-usb
+          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
+
+          sudo mount --bind /dev chroot/dev
+          sudo mount --bind /run chroot/run
+          sudo mount --bind /proc chroot/proc
+
+          echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic systemd-sysv ${{ github.event.inputs.packages }}"
+
+          # 设置 root 用户密码为 1234
+          echo -e "root:1234\n" | sudo chroot chroot /usr/sbin/chpasswd
+
+          sudo umount chroot/dev
+          sudo umount chroot/run
+          sudo umount chroot/proc
+
+      - name: 创建可启动镜像
+        run: |
+          sudo mke2fs -F -t ext4 -L "Ubuntu USB" -d ~/ubuntu-usb/chroot ~/ubuntu-usb/ubuntu-usb.img 4G
+
+          mkdir -p ~/ubuntu-usb/boot/grub
+          cat <<EOF > ~/ubuntu-usb/boot/grub/grub.cfg
+          set timeout=5
+          set default=0
+
+          # 自动搜索包含 vmlinuz 的设备
+          search --set=root --file /boot/vmlinuz
+
+          menuentry "Ubuntu on USB" {
+              linux /boot/vmlinuz-$(ls ~/ubuntu-usb/chroot/boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=${root} ro quiet splash
+              initrd /boot/initrd.img-$(ls ~/ubuntu-usb/chroot/boot/initrd.img-* | sed 's/.*initrd.img-//')
+          }
+          EOF
+
+          sudo grub-mkrescue -o ~/ubuntu-usb/ubuntu-usb.iso ~/ubuntu-usb
+
+      - name: 清理工作目录
+        run: |
+          sudo rm -rf ~/ubuntu-usb
