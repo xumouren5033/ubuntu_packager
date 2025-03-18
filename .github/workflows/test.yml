@@ -23,12 +23,11 @@ jobs:
         run: |
           sudo mkdir /live
           cd /live
-          name: Live Build Configuration
           sudo lb config \
             --mirror-bootstrap http://archive.ubuntu.com/ubuntu \
             --mirror-binary http://archive.ubuntu.com/ubuntu \
             --mirror-chroot http://archive.ubuntu.com/ubuntu \
-            --suite focal  # 设置为 Ubuntu 20.04 LTS
+            --suite jammy
 
       
       - name: Build LiveCD
