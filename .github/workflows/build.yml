@@ -63,7 +63,7 @@ jobs:
 
           echo "GRUB_DISABLE_OS_PROBER=false" | sudo tee -a chroot/etc/default/grub
           sudo chroot chroot /bin/bash -c "update-grub"
-          pkill -9 -f "./chroot"
+          sudo pkill -9 -f "./chroot" || true
           sudo umount chroot/dev
           sudo umount chroot/run
           sudo umount chroot/proc
