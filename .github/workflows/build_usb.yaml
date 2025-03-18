@@ -55,7 +55,7 @@ jobs:
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic systemd-sysv ${{ github.event.inputs.packages }}"
 
           # 设置 root 用户密码为 1234
-          echo -e "root:1234\n" | sudo chroot chroot /usr/sbin/chpasswd
+          sudo chroot chroot /bin/bash -c "echo -e 'root\n1234\n1234' | passwd root"
 
           sudo umount chroot/dev
           sudo umount chroot/run
