@@ -23,7 +23,7 @@ jobs:
         run: |
           sudo mkdir /live
           cd /live
-          lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
+          sudo lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
 
       
       - name: Build LiveCD
