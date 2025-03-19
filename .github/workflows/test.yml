@@ -13,10 +13,10 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v4
 
-      #- name: Install dependencies
-        #run: |
-          #sudo apt-get update
-          #sudo apt-get install -y xorriso squashfs-tools dmraid lvm2 samba-common
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorriso squashfs-tools dmraid lvm2 samba-common
 
       - name: Download Distroshare Ubuntu Imager
         run: |
@@ -24,21 +24,20 @@ jobs:
           unzip master -d /tmp
           cd /tmp/distroshare-ubuntu-imager-master
           sudo cp distroshare-ubuntu-imager.sh /usr/local/bin/
-          cd config
-          ls
-          #sudo cp config/distroshare-ubuntu-imager /etc/
           
-      #- name: Modify configuration file
-        #run: |
-          #sudo sed -i 's#WORK="/tmp/folder"#WORK="/tmp/livecd"#' /etc/distroshare-ubuntu-imager
-          #sudo sed -i 's#ISO_NAME="live-cd.iso"#ISO_NAME="ubuntu-custom.iso"#' /etc/distroshare-ubuntu-imager
+          
+          
+      - name: Modify configuration file
+        run: |
+          sudo sed -i 's#WORK="/tmp/folder"#WORK="/tmp/livecd"#' /tmp/distroshare-ubuntu-imager-master/distroshare-ubuntu-imager.config
+          sudo sed -i 's#ISO_NAME="live-cd.iso"#ISO_NAME="ubuntu-custom.iso"#' /tmp/distroshare-ubuntu-imager-master/distroshare-ubuntu-imager.config
+          sudo cp /tmp/distroshare-ubuntu-imager-master/distroshare-ubuntu-imager.config /etc/
+      - name: Create Live CD
+        run: |
+          sudo distroshare-ubuntu-imager.sh
 
-      #- name: Create Live CD
-        #run: |
-          #sudo distroshare-ubuntu-imager.sh
-
-      #- name: Upload Live CD
-        #uses: actions/upload-artifact@v4
-        #with:
-          #name: ubuntu-custom.iso
-          #path: /tmp/livecd/ubuntu-custom.iso
+      - name: Upload Live CD
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-custom.iso
+          path: /tmp/livecd/ubuntu-custom.iso
