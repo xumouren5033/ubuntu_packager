@@ -22,6 +22,7 @@ jobs:
       - name: Create build directory
         run: |
           sudo mkdir /live
+          sudo chown -R runner:runner /live
           cd /live
           sudo lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
           sudo mkdir -p config/hooks
