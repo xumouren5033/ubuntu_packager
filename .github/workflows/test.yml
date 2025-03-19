@@ -31,7 +31,7 @@ jobs:
             mv /usr/sbin/start-stop-daemon /usr/sbin/start-stop-daemon.bak
           fi
           EOF
-          chmod +x config/hooks/pre-start-stop-daemon.hook.chroot
+          sudo chmod +x config/hooks/pre-start-stop-daemon.hook.chroot
       
       - name: Build LiveCD
         run: |
