@@ -1,61 +1,51 @@
-name: Build LiveCD
+name: Build Ubuntu Image
 
 on:
-  push:
+  workflow_dispatch:
+    inputs:
+      distribution:
+        description: 'Ubuntu distribution (jammy or noble)'
+        required: true
+        default: 'jammy'
+      architecture:
+        description: 'Architecture (amd64 or i386)'
+        required: true
+        default: 'amd64'
 
 jobs:
-  build-livecd:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y live-build
 
-      - name: Set up dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y live-build
+    - name: Configure live-build
+      run: |
+        lb config --architecture ${{ github.event.inputs.architecture }} --distribution ${{ github.event.inputs.distribution }}
 
-      - name: Create build directory
-        run: |
-          sudo mkdir ~/live
-          
-          cd ~/live
-          sudo lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
-          sudo mkdir -p config/hooks
-          sudo cat << 'EOF' > config/hooks/pre-start-stop-daemon.chroot
-          #!/bin/sh
-          if [ -f /usr/sbin/start-stop-daemon ]; then
-            mv /usr/sbin/start-stop-daemon /usr/sbin/start-stop-daemon.bak
-          fi
-          EOF
-          sudo chmod +x config/hooks/pre-start-stop-daemon.chroot
-      
-      - name: Build LiveCD
-        run: |
-          cd ~/live
-          sudo lb build
+    - name: Create custom hook script
+      run: |
+        mkdir -p config/hooks/normal
+        cat > config/hooks/normal/9000-move-start-stop-daemon.chroot <<EOF
+        #!/bin/sh
+        if [ -f /usr/sbin/start-stop-daemon ]; then
+          mv /usr/sbin/start-stop-daemon /usr/sbin/start-stop-daemon.bak
+        fi
+        EOF
+        chmod +x config/hooks/normal/9000-move-start-stop-daemon.chroot
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.run_number }}
-          release_name: LiveCD Build ${{ github.run_number }}
-          draft: false
-          prerelease: false
+    - name: Build the image
+      run: |
+        sudo lb build
 
-      - name: Upload LiveCD ISO to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ~/live/live-image-*.iso
-          asset_name: livecd-${{ github.run_number }}.iso
-          asset_content_type: application/octet-stream
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ubuntu-image
+        path: binary.hybrid.iso
