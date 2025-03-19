@@ -21,11 +21,11 @@ jobs:
       - name: Download Distroshare Ubuntu Imager
         run: |
           wget https://codeload.github.com/Distroshare/distroshare-ubuntu-imager/zip/master
-          unzip master -d /tmp/distroshare-ubuntu-imager
-          cd /tmp/distroshare-ubuntu-imager/distroshare-ubuntu-imager-master
+          unzip master -d /tmp
+          cd /tmp/distroshare-ubuntu-imager-master
           sudo cp distroshare-ubuntu-imager.sh /usr/local/bin/
           sudo cp config/distroshare-ubuntu-imager /etc/
-
+          
       - name: Modify configuration file
         run: |
           sudo sed -i 's#WORK="/tmp/folder"#WORK="/tmp/livecd"#' /etc/distroshare-ubuntu-imager
