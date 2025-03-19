@@ -22,19 +22,15 @@ jobs:
         run: |
           wget https://codeload.github.com/Distroshare/distroshare-ubuntu-imager/zip/master
           unzip master -d /tmp
-          cd /tmp/distroshare-ubuntu-imager-master
-          sudo cp distroshare-ubuntu-imager.sh /usr/local/bin/
-          
-          
           
       - name: Modify configuration file
         run: |
           sudo sed -i 's#WORK="/tmp/folder"#WORK="/tmp/livecd"#' /tmp/distroshare-ubuntu-imager-master/distroshare-ubuntu-imager.config
           sudo sed -i 's#ISO_NAME="live-cd.iso"#ISO_NAME="ubuntu-custom.iso"#' /tmp/distroshare-ubuntu-imager-master/distroshare-ubuntu-imager.config
-          sudo cp /tmp/distroshare-ubuntu-imager-master/distroshare-ubuntu-imager.config /etc/
       - name: Create Live CD
         run: |
-          sudo distroshare-ubuntu-imager.sh
+          cd /tmp/distroshare-ubuntu-imager-master
+          sudo ./distroshare-ubuntu-imager.sh
 
       - name: Upload Live CD
         uses: actions/upload-artifact@v4
