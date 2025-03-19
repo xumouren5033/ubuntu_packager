@@ -21,9 +21,9 @@ jobs:
 
       - name: Create build directory
         run: |
-          sudo mkdir /live
-          sudo chown -R runner:runner /live
-          cd /live
+          sudo mkdir ~/live
+          
+          cd ~/live
           sudo lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
           sudo mkdir -p config/hooks
           sudo cat << 'EOF' > config/hooks/pre-start-stop-daemon.hook.chroot
@@ -36,7 +36,7 @@ jobs:
       
       - name: Build LiveCD
         run: |
-          cd /live
+          cd ~/live
           sudo lb build
 
       - name: Create Release
@@ -56,6 +56,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /live/live-image-*.iso
+          asset_path: ~/live/live-image-*.iso
           asset_name: livecd-${{ github.run_number }}.iso
           asset_content_type: application/octet-stream
