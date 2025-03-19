@@ -36,9 +36,22 @@ jobs:
         run: |
           cd /tmp/distroshare-ubuntu-imager-master
           sudo ./distroshare-ubuntu-imager.sh
+      - name: 设置版本号
+        run: echo "VERSION=v${{ github.run_number }}_new" >> $GITHUB_ENV
 
-      - name: Upload Live CD
-        uses: actions/upload-artifact@v4
+      - name: 压缩
+        run: |
+          gzip -8 -k /tmp/livecd/ubuntu-custom.iso
+      - name: 分割文件
+        run: |
+          split -b 1G /tmp/livecd/ubuntu-custom.iso.gz ./part_  # 按 1GB 分割文件
+      - name: 创建并上传 Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ubuntu-custom.iso
-          path: /tmp/livecd/ubuntu-custom.iso
+          tag_name: ${{ env.VERSION }}  # 使用推送的标签名
+          name: ${{ env.VERSION }}  # Release 名称
+          body: "请先合并下载的所有文件再使用，root密码为1234"  # Release 描述
+          files: |
+            ./part_*
+          token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
+      
