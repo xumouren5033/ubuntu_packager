@@ -1,51 +1,42 @@
-name: Build Ubuntu Image
+name: Create Live CD
 
 on:
-  workflow_dispatch:
-    inputs:
-      distribution:
-        description: 'Ubuntu distribution (jammy or noble)'
-        required: true
-        default: 'jammy'
-      architecture:
-        description: 'Architecture (amd64 or i386)'
-        required: true
-        default: 'amd64'
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Check out the code
+        uses: actions/checkout@v4
 
-    - name: Set up environment
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y live-build
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorriso squashfs-tools dmraid lvm2 samba-common
 
-    - name: Configure live-build
-      run: |
-        lb config --architecture ${{ github.event.inputs.architecture }} --distribution ${{ github.event.inputs.distribution }}
+      - name: Download Distroshare Ubuntu Imager
+        run: |
+          wget https://codeload.github.com/Distroshare/distroshare-ubuntu-imager/zip/master
+          unzip master -d /tmp/distroshare-ubuntu-imager
+          cd /tmp/distroshare-ubuntu-imager/distroshare-ubuntu-imager-master
+          sudo cp distroshare-ubuntu-imager.sh /usr/local/bin/
+          sudo cp config/distroshare-ubuntu-imager /etc/
 
-    - name: Create custom hook script
-      run: |
-        mkdir -p config/hooks/normal
-        cat > config/hooks/normal/9000-move-start-stop-daemon.chroot <<EOF
-        #!/bin/sh
-        if [ -f /usr/sbin/start-stop-daemon ]; then
-          mv /usr/sbin/start-stop-daemon /usr/sbin/start-stop-daemon.bak
-        fi
-        EOF
-        chmod +x config/hooks/normal/9000-move-start-stop-daemon.chroot
+      - name: Modify configuration file
+        run: |
+          sudo sed -i 's#WORK="/tmp/folder"#WORK="/tmp/livecd"#' /etc/distroshare-ubuntu-imager
+          sudo sed -i 's#ISO_NAME="live-cd.iso"#ISO_NAME="ubuntu-custom.iso"#' /etc/distroshare-ubuntu-imager
 
-    - name: Build the image
-      run: |
-        sudo lb build
+      - name: Create Live CD
+        run: |
+          sudo distroshare-ubuntu-imager.sh
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ubuntu-image
-        path: binary.hybrid.iso
+      - name: Upload Live CD
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-custom.iso
+          path: /tmp/livecd/ubuntu-custom.iso
