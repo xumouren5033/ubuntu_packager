@@ -24,7 +24,14 @@ jobs:
           sudo mkdir /live
           cd /live
           sudo lb config --architectures amd64 --binary-images iso-hybrid --distribution jammy --archive-areas "main restricted universe multiverse"
-
+          mkdir -p config/hooks
+          cat << 'EOF' > config/hooks/pre-start-stop-daemon.hook.chroot
+          #!/bin/sh
+          if [ -f /usr/sbin/start-stop-daemon ]; then
+            mv /usr/sbin/start-stop-daemon /usr/sbin/start-stop-daemon.bak
+          fi
+          EOF
+          chmod +x config/hooks/pre-start-stop-daemon.hook.chroot
       
       - name: Build LiveCD
         run: |
