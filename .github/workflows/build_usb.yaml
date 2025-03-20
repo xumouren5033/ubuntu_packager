@@ -1,3 +1,4 @@
+
 name: 构建U盘ubuntu镜像
 on:
   workflow_dispatch:
@@ -73,57 +74,52 @@ jobs:
           EOF
           sudo chmod +x chroot/etc/rc.local
 
-          sudo umount -l chroot/dev
-          sudo umount -l chroot/run
-          sudo umount -l chroot/proc
+          sudo umount chroot/dev
+          sudo umount chroot/run
+          sudo umount chroot/proc
 
-      - name: 创建 ext4 文件系统镜像
+      - name: 创建双分区img镜像
         run: |
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=ext4.img bs=1M count=3072
-          sudo mkfs.ext4 -F -L "Ubuntu USB" ext4.img  # 格式化为 ext4 文件系统
-          sudo mkdir -p ext4_mount  # 创建挂载点
-          sudo mount -o loop ext4.img ext4_mount  # 挂载 ext4 镜像文件
+          sudo dd if=/dev/zero of=ubuntu-usb.img bs=1M count=4096
+          sudo parted ubuntu-usb.img --script -- mklabel gpt
+          sudo parted ubuntu-usb.img --script -- mkpart primary fat32 1MiB 101MiB
+          sudo parted ubuntu-usb.img --script -- set 1 boot on
+          sudo parted ubuntu-usb.img --script -- mkpart primary ext4 101MiB 100%
+          sudo mkfs.fat -F 32 -n "EFI" ubuntu-usb.img
+          sudo mkfs.ext4 -L "Ubuntu USB" ubuntu-usb.img
 
-      - name: 将 chroot 内容复制到 ext4 文件系统
+      - name: 挂载分区并复制内容
         run: |
           cd ~/ubuntu-usb
-          sudo cp -a chroot/. ext4_mount/  # 将 chroot 内容复制到 ext4 文件系统
-          sudo umount -l ext4_mount  # 卸载 ext4 镜像文件
-          sudo rm -rf chroot  # 删除 chroot 目录（可选）
+          sudo mkdir -p efi_mount ext4_mount
+          sudo mount -o loop,offset=$((1*1024*1024)) ubuntu-usb.img efi_mount
+          sudo mount -o loop,offset=$((101*1024*1024)) ubuntu-usb.img ext4_mount
+          sudo mkdir -p ext4_mount/boot/efi
+          sudo cp -a chroot/. ext4_mount/
+          sudo umount efi_mount
+          sudo umount ext4_mount
+          sudo rmdir efi_mount ext4_mount
 
-      - name: 手动编辑 GRUB2 配置文件
+      - name: 安装GRUB到EFI分区
         run: |
           cd ~/ubuntu-usb
-          sudo mkdir -p ext4_mount/boot/grub
-          sudo tee ext4_mount/boot/grub/grub.cfg <<EOF
-          set timeout=5
-          set default=0
-
-          # 自动搜索包含 vmlinuz 的设备
-          search --set=root --file /boot/vmlinuz
-
-          menuentry 'Ubuntu on USB' {
-              linux /boot/vmlinuz-$(ls ext4_mount/boot/vmlinuz-* | sed 's/.*vmlinuz-//') root=\${root} ro quiet splash
-              initrd /boot/initrd.img-$(ls ext4_mount/boot/initrd.img-* | sed 's/.*initrd.img-//')
-          }
-          EOF
-
-      - name: 创建可启动 ISO 镜像
-        run: |
-          cd ~/ubuntu-usb
-          sudo grub-mkrescue -o ubuntu-usb.iso . -- --as mkisofs -J -R -joliet-long
+          sudo mkdir -p efi_mount
+          sudo mount -o loop,offset=$((1*1024*1024)) ubuntu-usb.img efi_mount
+          sudo grub-install --target=x86_64-efi --efi-directory=efi_mount --bootloader-id="Ubuntu USB" --removable
+          sudo umount efi_mount
+          sudo rmdir efi_mount
 
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
 
-      - name: 压缩
+      - name: 压缩img镜像
         run: |
-          gzip -8 -k ~/ubuntu-usb/ubuntu-usb.iso
+          gzip -8 -k ~/ubuntu-usb/ubuntu-usb.img
 
       - name: 分割文件
         run: |
-          split -b 1G ~/ubuntu-usb/ubuntu-usb.iso.gz ./part_  # 按 4GB 分割文件
+          split -b 1G ~/ubuntu-usb/ubuntu-usb.img.gz ./part_  # 按 1GB 分割文件
 
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
