@@ -15,6 +15,15 @@ on:
         required: false
         default: ''
         type: string
+      mirror_url:
+        description: 'chroot环境使用的镜像站地址'
+        required: true
+        default: 'http://archive.ubuntu.com/ubuntu/'
+        type: choice
+        options:
+          - http://archive.ubuntu.com/ubuntu/
+          - http://mirrors.aliyun.com/ubuntu/
+          - http://mirrors.tuna.tsinghua.edu.cn/ubuntu/
 
 jobs:
   build:
@@ -40,20 +49,32 @@ jobs:
           set -e
           mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
-          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
+          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot ${{ github.event.inputs.mirror_url }}
 
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb ${{ github.event.inputs.mirror_url }}  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb ${{ github.event.inputs.mirror_url }}  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64 ${{ github.event.inputs.packages }}"
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64"
 
-          sudo umount chroot/dev
-          sudo umount chroot/run
-          sudo umount chroot/proc
+          # 在chroot环境中添加自启动脚本
+          sudo tee chroot/etc/rc.local <<EOF
+          #!/bin/bash
+          # 修改镜像站为用户选择的
+          sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          # 安装用户输入的软件包
+          apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
+          # 删除自启动脚本
+          rm /etc/rc.local
+          EOF
+          sudo chmod +x chroot/etc/rc.local
+
+          sudo umount -l chroot/dev
+          sudo umount -l chroot/run
+          sudo umount -l chroot/proc
 
       - name: 创建 ext4 文件系统镜像
         run: |
@@ -67,8 +88,9 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo cp -a chroot/. ext4_mount/  # 将 chroot 内容复制到 ext4 文件系统
-          sudo umount ext4_mount  # 卸载 ext4 镜像文件
+          sudo umount -l ext4_mount  # 卸载 ext4 镜像文件
           sudo rm -rf chroot  # 删除 chroot 目录（可选）
+
       - name: 手动编辑 GRUB2 配置文件
         run: |
           cd ~/ubuntu-usb
@@ -85,12 +107,12 @@ jobs:
               initrd /boot/initrd.img-$(ls ext4_mount/boot/initrd.img-* | sed 's/.*initrd.img-//')
           }
           EOF
+
       - name: 创建可启动 ISO 镜像
         run: |
           cd ~/ubuntu-usb
           sudo grub-mkrescue -o ubuntu-usb.iso . -- --as mkisofs -J -R -joliet-long
 
-      
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
 
