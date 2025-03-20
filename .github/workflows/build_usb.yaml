@@ -49,7 +49,7 @@ jobs:
           set -e
           mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
-          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot ${{ github.event.inputs.mirror_url }}
+          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
 
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
