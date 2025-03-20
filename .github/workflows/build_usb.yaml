@@ -55,8 +55,8 @@ jobs:
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          echo "deb ${{ github.event.inputs.mirror_url }}  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb ${{ github.event.inputs.mirror_url }}  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64"
 
