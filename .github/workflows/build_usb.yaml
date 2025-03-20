@@ -49,14 +49,14 @@ jobs:
           set -e
           mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
-          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
+          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot https://archive.ubuntu.com/ubuntu/
 
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          echo "deb http://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb http://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64"
 
@@ -65,6 +65,7 @@ jobs:
           #!/bin/bash
           # 修改镜像站为用户选择的
           sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
           # 安装用户输入的软件包
           apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
           # 删除自启动脚本
