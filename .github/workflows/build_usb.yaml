@@ -78,8 +78,44 @@ jobs:
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
 
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64"
-          sudo chroot root /bin/bash -c "sudo grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id='Ubuntu USB' --removable"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y elilo"
+          # 复制内核文件和初始化RAM磁盘文件
+          sudo cp /path/to/vmlinuz-* root/boot/
+          sudo cp /path/to/initrd.img-* root/boot/
+          sudo tee root/generate_elilo_conf.sh <<EOF
+          #!/bin/bash
+
+          # 获取最新的内核文件和初始化RAM磁盘文件
+          latest_kernel=\$(ls /boot/vmlinuz-* | sort -V | tail -n1)
+          latest_initrd=\$(ls /boot/initrd.img-* | sort -V | tail -n1)
+
+          # 生成 elilo.conf 文件
+          cat <<EOL > /boot/efi/EFI/ubuntu/elilo.conf
+          # Timeout in seconds
+          timeout=5
+
+          # Default kernel label
+          default=linux
+
+          # Kernel image
+          image=\${latest_kernel}
+              label=linux
+              initrd=\${latest_initrd}
+              append="root=/dev/sda1 ro quiet splash"
+          EOL
+          EOF
+
+          # 使脚本可执行
+          sudo chmod +x root/generate_elilo_conf.sh
+
+          # 安装 elilo
+          
+          sudo chroot root /bin/bash -c "/generate_elilo_conf.sh"
+          sudo chroot root /bin/bash -c "elilo -d /boot/efi/EFI/ubuntu -f"
+
+          # 创建 /EFI/BOOT 目录并复制 elilo.efi
+          sudo mkdir -p root/efi/EFI/BOOT
+          sudo cp root/boot/efi/EFI/ubuntu/elilo.efi root/efi/EFI/BOOT/bootx64.efi
           # 在chroot环境中添加自启动脚本
           sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
