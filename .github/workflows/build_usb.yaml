@@ -93,13 +93,13 @@ jobs:
           EOF
           sudo chmod +x chroot_mount/etc/rc.local
 
-          sudo umount root/dev
-          sudo umount root/run
-          sudo umount root/proc
-          sudo umount root/efi
+          sudo umount -l root/dev
+          sudo umount -l root/run
+          sudo umount -l root/proc
+          sudo umount -l root/efi
           sudo rm -rf root/efi
-          sudo umount efi
-          sudo umount root
+          sudo umount -l efi
+          sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
           sudo rmdir root
 
