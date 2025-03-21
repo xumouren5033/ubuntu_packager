@@ -106,6 +106,7 @@ jobs:
           cd ~/ubuntu-usb
           # 创建一个空的img文件，大小根据实际需求调整
           sudo dd if=/dev/zero of=ubuntu-usb.img bs=1M count=4096
+          sudo mkfs.fat -F 32 ubuntu-usb.img
           sudo mkdir -p usb_mount
           sudo mount -o loop ubuntu-usb.img usb_mount
 
