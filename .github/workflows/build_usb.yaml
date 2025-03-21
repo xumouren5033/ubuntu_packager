@@ -84,7 +84,7 @@ jobs:
           sudo cp /path/to/initrd.img-* root/boot/
           sudo tee root/generate_elilo_conf.sh <<EOF
           #!/bin/bash
-
+          root_device=\$(df -h / | awk 'NR==2 {print \$1}')
           # 获取最新的内核文件和初始化RAM磁盘文件
           latest_kernel=\$(ls /boot/vmlinuz-* | sort -V | tail -n1)
           latest_initrd=\$(ls /boot/initrd.img-* | sort -V | tail -n1)
@@ -93,7 +93,7 @@ jobs:
           cat <<EOL > /boot/efi/EFI/ubuntu/elilo.conf
           # Timeout in seconds
           timeout=5
-
+          
           # Default kernel label
           default=linux
 
@@ -101,7 +101,7 @@ jobs:
           image=\${latest_kernel}
               label=linux
               initrd=\${latest_initrd}
-              append="root=/dev/sda1 ro quiet splash"
+              append="root=\${root_device} ro quiet splash"
           EOL
           EOF
 
