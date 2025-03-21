@@ -1,0 +1,14 @@
+
+name: 构建U盘ubuntu镜像
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: test
+        run: |
+           sudo ls /boot
