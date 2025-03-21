@@ -66,7 +66,7 @@ jobs:
           echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot_mount/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot_mount/etc/apt/sources.list
 
-          sudo chroot chroot_mount /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64 ${{ github.event.inputs.packages }}"
+          sudo chroot chroot_mount /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64"
 
           # 在chroot环境中添加自启动脚本
           sudo tee chroot_mount/etc/rc.local <<EOF
