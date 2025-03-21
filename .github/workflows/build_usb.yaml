@@ -19,12 +19,12 @@ on:
       mirror_url:
         description: 'chroot环境使用的镜像站地址'
         required: true
-        default: 'http://archive.ubuntu.com/ubuntu/'
+        default: 'https://archive.ubuntu.com/ubuntu/'
         type: choice
         options:
-          - http://archive.ubuntu.com/ubuntu/
-          - http://mirrors.aliyun.com/ubuntu/
-          - http://mirrors.tuna.tsinghua.edu.cn/ubuntu/
+          - https://archive.ubuntu.com/ubuntu/
+          - https://mirrors.aliyun.com/ubuntu/
+          - https://mirrors.tuna.tsinghua.edu.cn/ubuntu/
 
 jobs:
   build:
