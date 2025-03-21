@@ -80,8 +80,8 @@ jobs:
 
           
           # 复制内核文件和初始化RAM磁盘文件
-          sudo cp /path/to/vmlinuz-* root/boot/
-          sudo cp /path/to/initrd.img-* root/boot/
+          sudo cp /boot/vmlinuz-* root/boot/
+          sudo cp /boot/initrd.img-* root/boot/
           sudo chroot root /bin/bash -c "apt-get update && apt-get install -y software-properties-common"
           sudo chroot root /bin/bash -c "add-apt-repository -y ppa:rodsmith/refind"
           sudo chroot root /bin/bash -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y refind"
