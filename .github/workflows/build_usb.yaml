@@ -113,7 +113,7 @@ jobs:
       - name: 复制文件到ubuntu-usb.img
         run: |
           cd ~/ubuntu-usb
-          sudo cp chroot.img usb_mount/
+          sudo cp chroot/chroot.img usb_mount/
           sudo cp efi.img usb_mount/
 
       - name: 卸载ubuntu-usb.img
