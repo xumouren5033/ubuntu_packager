@@ -91,7 +91,7 @@ jobs:
           # 删除自启动脚本
           rm /etc/rc.local
           EOF
-          sudo chmod +x chroot_mount/etc/rc.local
+          sudo chmod +x root/etc/rc.local
 
           sudo umount -l root/dev
           sudo umount -l root/run
