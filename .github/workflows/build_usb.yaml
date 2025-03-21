@@ -19,12 +19,12 @@ on:
       mirror_url:
         description: 'chroot环境使用的镜像站地址'
         required: true
-        default: 'http://archive.ubuntu.com/ubuntu/'
+        default: 'https://archive.ubuntu.com/ubuntu/'
         type: choice
         options:
-          - http://archive.ubuntu.com/ubuntu/
-          - http://mirrors.aliyun.com/ubuntu/
-          - http://mirrors.tuna.tsinghua.edu.cn/ubuntu/
+          - https://archive.ubuntu.com/ubuntu/
+          - https://mirrors.aliyun.com/ubuntu/
+          - https://mirrors.tuna.tsinghua.edu.cn/ubuntu/
 
 jobs:
   build:
@@ -45,24 +45,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y debootstrap xorriso grub-efi-amd64 mtools e2fsprogs
 
-      - name: 创建基础系统
+      - name: 创建基础系统 (chroot部分) 镜像文件
         run: |
           set -e
-          mkdir -p ~/ubuntu-usb
-          cd ~/ubuntu-usb
-          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot https://archive.ubuntu.com/ubuntu/
+          mkdir -p ~/ubuntu-usb/chroot
+          cd ~/ubuntu-usb/chroot
+          # 创建一个空的镜像文件用于存放chroot内容
+          chroot_image="chroot.img"
+          sudo dd if=/dev/zero of=$chroot_image bs=1M count=3072
+          sudo mkfs.ext4 $chroot_image
+          sudo mkdir -p chroot_mount
+          sudo mount $chroot_image chroot_mount
 
-          sudo mount --bind /dev chroot/dev
-          sudo mount --bind /run chroot/run
-          sudo mount --bind /proc chroot/proc
+          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} chroot_mount https://archive.ubuntu.com/ubuntu/
 
-          echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          sudo mount --bind /dev chroot_mount/dev
+          sudo mount --bind /run chroot_mount/run
+          sudo mount --bind /proc chroot_mount/proc
 
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64"
+          echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot_mount/etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/  ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot_mount/etc/apt/sources.list
+
+          sudo chroot chroot_mount /bin/bash -c "apt-get update && apt-get install -y grub-efi-amd64 ${{ github.event.inputs.packages }}"
 
           # 在chroot环境中添加自启动脚本
-          sudo tee chroot/etc/rc.local <<EOF
+          sudo tee chroot_mount/etc/rc.local <<EOF
           #!/bin/bash
           # 修改镜像站为用户选择的
           sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
@@ -72,43 +79,47 @@ jobs:
           # 删除自启动脚本
           rm /etc/rc.local
           EOF
-          sudo chmod +x chroot/etc/rc.local
+          sudo chmod +x chroot_mount/etc/rc.local
 
-          sudo umount chroot/dev
-          sudo umount chroot/run
-          sudo umount chroot/proc
+          sudo umount chroot_mount/dev
+          sudo umount chroot_mount/run
+          sudo umount chroot_mount/proc
+          sudo umount chroot_mount
+          sudo rmdir chroot_mount
 
-      - name: 创建双分区img镜像
+      - name: 创建EFI系统部分镜像文件
         run: |
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=ubuntu-usb.img bs=1M count=4096
-          sudo parted ubuntu-usb.img --script -- mklabel gpt
-          sudo parted ubuntu-usb.img --script -- mkpart primary fat32 1MiB 101MiB
-          sudo parted ubuntu-usb.img --script -- set 1 boot on
-          sudo parted ubuntu-usb.img --script -- mkpart primary ext4 101MiB 100%
-          sudo mkfs.fat -F 32 -n "EFI" ubuntu-usb.img
-          sudo mkfs.ext4 -L "Ubuntu USB" ubuntu-usb.img
-
-      - name: 挂载分区并复制内容
-        run: |
-          cd ~/ubuntu-usb
-          sudo mkdir -p efi_mount ext4_mount
-          sudo mount -o loop,offset=$((1*1024*1024)) ubuntu-usb.img efi_mount
-          sudo mount -o loop,offset=$((101*1024*1024)) ubuntu-usb.img ext4_mount
-          sudo mkdir -p ext4_mount/boot/efi
-          sudo cp -a chroot/. ext4_mount/
-          sudo umount efi_mount
-          sudo umount ext4_mount
-          sudo rmdir efi_mount ext4_mount
-
-      - name: 安装GRUB到EFI分区
-        run: |
-          cd ~/ubuntu-usb
+          efi_image="efi.img"
+          sudo dd if=/dev/zero of=$efi_image bs=1M count=100
+          sudo mkfs.fat -F 32 $efi_image
           sudo mkdir -p efi_mount
-          sudo mount -o loop,offset=$((1*1024*1024)) ubuntu-usb.img efi_mount
+          sudo mount $efi_image efi_mount
+          sudo mkdir -p efi_mount/EFI/BOOT
+          # 这里假设安装grub相关文件到EFI分区（实际可能需要更精确的操作）
           sudo grub-install --target=x86_64-efi --efi-directory=efi_mount --bootloader-id="Ubuntu USB" --removable
           sudo umount efi_mount
           sudo rmdir efi_mount
+
+      - name: 创建并挂载ubuntu-usb.img
+        run: |
+          cd ~/ubuntu-usb
+          # 创建一个空的img文件，大小根据实际需求调整
+          sudo dd if=/dev/zero of=ubuntu-usb.img bs=1M count=4096
+          sudo mkdir -p usb_mount
+          sudo mount -o loop ubuntu-usb.img usb_mount
+
+      - name: 复制文件到ubuntu-usb.img
+        run: |
+          cd ~/ubuntu-usb
+          sudo cp chroot.img usb_mount/
+          sudo cp efi.img usb_mount/
+
+      - name: 卸载ubuntu-usb.img
+        run: |
+          cd ~/ubuntu-usb
+          sudo umount usb_mount
+          sudo rmdir usb_mount
 
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb" >> $GITHUB_ENV
@@ -134,3 +145,4 @@ jobs:
       - name: 清理工作目录
         run: |
           sudo rm -rf ~/ubuntu-usb
+
