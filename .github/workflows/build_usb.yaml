@@ -44,6 +44,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 隐藏机密
+        uses: hugcabbage/action-hide-sensitive-inputs@v1
+        with:
+          exclude_inputs: password,ssid
       - name: 清理磁盘空间
         uses: jlumbroso/free-disk-space@main
         with:
