@@ -89,7 +89,7 @@ jobs:
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
-          sudo mount --bind /dev/mapper/loop0p1 root/mnt/efi
+          sudo mount --bind /dev/mapper/loop0p1 root/boot/efi
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
@@ -105,7 +105,7 @@ jobs:
           sudo mkdir -p ~/ubuntu-usb/root/refind
           sudo cp -r refind/refind-bin-0.14.2/. ~/ubuntu-usb/root/refind
           cd ~/ubuntu-usb
-          sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /mnt/efi"
+          sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /boot/efi"
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
@@ -128,8 +128,8 @@ jobs:
           sudo umount -l root/dev
           sudo umount -l root/run
           sudo umount -l root/proc
-          sudo umount -l root/mnt/efi
-          sudo rm -rf root/mnt/efi
+          sudo umount -l root/boot/efi
+          sudo rm -rf root/boot/efi
           sudo rm -rf root/refind
           sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
