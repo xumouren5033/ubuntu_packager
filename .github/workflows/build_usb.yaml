@@ -79,7 +79,6 @@ jobs:
             sudo mkfs.fat -F 32 /dev/mapper/loop0p1
             sudo mkfs.ext4 /dev/mapper/loop0p2
           sudo mkdir -p root
-          sudo mount /dev/mapper/loop0p1 efi
           sudo mount /dev/mapper/loop0p2 root
       
       - name: 创建基础系统
