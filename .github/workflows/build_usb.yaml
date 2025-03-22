@@ -84,15 +84,41 @@ jobs:
           sudo cp /boot/initrd.img root/boot/
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y software-properties-common xmlstarlet"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y software-properties-common"
           sudo chroot root /bin/bash -c "wget https://github.com/CloverHackyColor/CloverBootloader/releases/download/5161/CLOVERX64.efi.zip -O /tmp/cloverx64.efi.zip"
-          sudo chroot root /bin/bash -c "unzip /tmp/cloverx64.efi.zip -d /boot/efi/EFI/BOOT"
-          sudo chroot root /bin/bash -c "cp /boot/efi/EFI/BOOT/config.plist.sample /boot/efi/EFI/BOOT/config.plist"
+          sudo chroot root /bin/bash -c "unzip /tmp/cloverx64.efi.zip -d /efi/EFI/BOOT"
+          sudo chroot root /bin/bash -c "mkdir -p /efi/EFI/CLOVER"
 
-          # 配置 Clover
-          sudo chroot root /bin/bash -c "xmlstarlet ed -L -s //array[1]/dict -t elem -n Kernel -v 'vmlinuz' -i //Kernel -t attr -n 'path' -v '\vmlinuz' /boot/efi/EFI/BOOT/config.plist"
-          sudo chroot root /bin/bash -c "xmlstarlet ed -L -s //array[1]/dict -t elem -n Initrd -v 'initrd.img' -i //Initrd -t attr -n 'path' -v '\initrd.img' /boot/efi/EFI/BOOT/config.plist"
-          sudo chroot root /bin/bash -c "xmlstarlet ed -L -s //array[1]/dict -t elem -n Title -v 'Ubuntu' /boot/efi/EFI/BOOT/config.plist"
+          # 创建并编辑 config.plist 文件
+          sudo tee root/efi/EFI/CLOVER/config.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+              <dict>
+                  <key>Boot</key>
+                  <dict>
+                      <key>Timeout</key>
+                      <integer>5</integer>
+                      <key>DefaultVolume</key>
+                      <string>Linux</string>
+                  </dict>
+                  <key>GUI</key>
+                  <dict>
+                      <key>Scan</key>
+                      <dict>
+                          <key>Entries</key>
+                          <true/>
+                          <key>Linux</key>
+                          <true/>
+                          <key>Windows</key>
+                          <false/>
+                          <key>Apple</key>
+                          <false/>
+                      </dict>
+                  </dict>
+              </dict>
+          </plist>
+          EOF
           # 在chroot环境中添加自启动脚本
           sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
