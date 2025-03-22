@@ -153,7 +153,7 @@ jobs:
           rm /etc/rc.local
           EOF
           sudo chmod +x root/etc/rc.local
-          sudo chroot root /bin/bash -c "echo '1234\n1234' | passwd root"
+          sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
           sudo umount -l root/dev
           sudo umount -l root/run
           sudo umount -l root/proc
