@@ -105,7 +105,7 @@ jobs:
         run: |
           sudo mkdir -p ~/ubuntu-usb/root/efi
           sudo mkdir -p ~/ubuntu-usb/root/refind
-          sudo cp refind/refind-bin-0.14.2/. ~/ubuntu-usb/root/refind
+          sudo cp -r refind/refind-bin-0.14.2/. ~/ubuntu-usb/root/refind
           cd ~/ubuntu-usb
           sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /efi"
       - name: 创建安装脚本
