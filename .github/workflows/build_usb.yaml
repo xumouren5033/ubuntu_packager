@@ -84,7 +84,7 @@ jobs:
           sudo cp /boot/initrd.img root/boot/
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y wget
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y wget"
           sudo chroot root /bin/bash -c "wget https://github.com/CloverHackyColor/CloverBootloader/releases/download/5161/CLOVERX64.efi.zip -O /tmp/cloverx64.efi.zip"
           sudo chroot root /bin/bash -c "unzip /tmp/cloverx64.efi.zip -d /efi/EFI/BOOT"
           sudo chroot root /bin/bash -c "mv /efi/EFI/BOOT/CLOVERX64.efi /efi/EFI/BOOT/bootx64.efi"
