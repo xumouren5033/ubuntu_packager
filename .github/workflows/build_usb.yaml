@@ -78,7 +78,7 @@ jobs:
             sleep 5  # 等待设备映射完成
             sudo mkfs.fat -F 32 /dev/mapper/loop0p1
             sudo mkfs.ext4 /dev/mapper/loop0p2
-          sudo mkdir -p efi root
+          sudo mkdir -p root
           sudo mount /dev/mapper/loop0p1 efi
           sudo mount /dev/mapper/loop0p2 root
       
@@ -86,11 +86,11 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} root https://archive.ubuntu.com/ubuntu/
-          sudo mkdir -p root/efi
+          sudo mkdir -p root/mnt/efi
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
-          sudo mount --bind efi root/efi
+          sudo mount --bind /dev/mapper/loop0p1 root/mnt/efi
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
@@ -106,7 +106,7 @@ jobs:
           sudo mkdir -p ~/ubuntu-usb/root/refind
           sudo cp -r refind/refind-bin-0.14.2/. ~/ubuntu-usb/root/refind
           cd ~/ubuntu-usb
-          sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /efi"
+          sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /mnt/efi"
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
@@ -129,10 +129,9 @@ jobs:
           sudo umount -l root/dev
           sudo umount -l root/run
           sudo umount -l root/proc
-          sudo umount -l root/efi
-          sudo rm -rf root/efi
+          sudo umount -l root/mnt/efi
+          sudo rm -rf root/mnt/efi
           sudo rm -rf root/refind
-          sudo umount -l efi
           sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
           sudo rmdir root
