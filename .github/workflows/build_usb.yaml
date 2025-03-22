@@ -55,7 +55,7 @@ jobs:
             mklabel gpt \
             mkpart ESP fat32 1MiB 101MiB \
             set 1 boot on \
-            mkpart primary ext4 102MiB 100%
+            mkpart primary ext4 101MiB 100%
             # 挂载镜像文件并格式化分区
             sudo kpartx -av ubuntu-usb.img
             sleep 5  # 等待设备映射完成
@@ -84,7 +84,7 @@ jobs:
           sudo cp /boot/initrd.img root/boot/
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y software-properties-common"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y software-properties-common xmlstarlet"
           sudo chroot root /bin/bash -c "wget https://github.com/CloverHackyColor/CloverBootloader/releases/download/5161/CLOVERX64.efi.zip -O /tmp/cloverx64.efi.zip"
           sudo chroot root /bin/bash -c "unzip /tmp/cloverx64.efi.zip -d /boot/efi/EFI/BOOT"
           sudo chroot root /bin/bash -c "cp /boot/efi/EFI/BOOT/config.plist.sample /boot/efi/EFI/BOOT/config.plist"
