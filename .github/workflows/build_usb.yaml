@@ -109,7 +109,7 @@ jobs:
           sudo chroot root /bin/bash -c "mkdir -p /efi/EFI/CLOVER"
 
           # 创建并编辑 config.plist 文件
-          sudo tee root/efi/EFI/CLOVER/config.plist <<EOF >
+          sudo tee root/efi/EFI/CLOVER/config.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -139,7 +139,7 @@ jobs:
           </plist>
           EOF
           # 在chroot环境中添加自启动脚本
-          sudo tee root/etc/rc.local <<EOF >
+          sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
           if [ "${{ github.event.inputs.use_wifi }}" = "true" ]; then
               nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
