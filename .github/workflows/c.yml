@@ -1,0 +1,17 @@
+
+name: b
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      
+
+      - name: test
+        run: |
+          wget https://github.com/CloverHackyColor/CloverBootloader/releases/download/5161/CLOVERX64.efi.zip -O /tmp/cloverx64.efi.zip"
+          unzip /tmp/cloverx64.efi.zip -d test
+          ls test
