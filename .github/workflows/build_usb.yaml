@@ -170,19 +170,17 @@ jobs:
       - name: 压缩img镜像
         run: |
           gzip -8 -k ~/ubuntu-usb/ubuntu-usb.img
+          sudo cp ~/ubuntu-usb/ubuntu-usb.img.gz ubuntu-usb.img.gz
 
-      - name: 分割文件
-        run: |
-          split -b 1G ~/ubuntu-usb/ubuntu-usb.img.gz ./part_  # 按 1GB 分割文件
-
+      
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION }}  # 使用推送的标签名
           name: ${{ env.VERSION }}  # Release 名称
-          body: "请先合并下载的所有文件再使用"  # Release 描述
+          body: "root密码为1234"  # Release 描述
           files: |
-            ./part_*
+            ./ubuntu-usb.img.gz
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
 
       - name: 清理工作目录
