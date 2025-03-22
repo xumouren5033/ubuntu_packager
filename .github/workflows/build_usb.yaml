@@ -25,6 +25,19 @@ on:
           - https://archive.ubuntu.com/ubuntu/
           - https://mirrors.aliyun.com/ubuntu/
           - https://mirrors.tuna.tsinghua.edu.cn/ubuntu/
+      password:
+        description: 'WiFi密码'
+        required: false
+        type: string
+      ssid:
+        description: 'WiFi名称'
+        required: false
+        type: string
+      use_wifi:
+        description: '是否使用WiFi连接（否则使用有线连接）'
+        required: true
+        default: 'false'
+        type: boolean
 
 jobs:
   build:
@@ -124,6 +137,9 @@ jobs:
           # 在chroot环境中添加自启动脚本
           sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
+          if [ ${{ github.event.inputs.use_wifi }} = "true" ]; then
+              nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
+          fi
           # 修改镜像站为用户选择的
           sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
           sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
