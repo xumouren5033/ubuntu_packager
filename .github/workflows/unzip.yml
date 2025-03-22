@@ -15,7 +15,7 @@ jobs:
 
     - name: Unzip file
       run: |
-        unzip -o path/to/your/file.zip -d path/to/destination  # 解压文件
+        unzip -o refind-bin-gnuefi-0_1742632877678.zip -d refind  # 解压文件
 
     - name: Set up Git
       run: |
