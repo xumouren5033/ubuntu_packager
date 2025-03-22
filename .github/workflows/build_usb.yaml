@@ -103,9 +103,11 @@ jobs:
           sudo cp /boot/initrd.img-* root/boot/
       - name: 设置efi
         run: |
-          sudo mkdir -p ~/ubuntu-usb/root/efi/EFI/BOOT/
+          sudo mkdir -p ~/ubuntu-usb/root/efi
           sudo mkdir -p ~/ubuntu-usb/root/refind
           sudo cp refind/refind-bin-0.14.2/. ~/ubuntu-usb/root/refind
+          cd ~/ubuntu-usb
+          sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /efi"
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
@@ -130,6 +132,7 @@ jobs:
           sudo umount -l root/proc
           sudo umount -l root/efi
           sudo rm -rf root/efi
+          sudo rm -rf root/refind
           sudo umount -l efi
           sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
