@@ -12,12 +12,12 @@ on:
           - jammy
           - noble
       packages:
-        description: '预装软件包列表（每个软件包的名字之间以空格分隔）'
+        description: '需要安装的软件包列表（软件包名称之间用空格分隔，不需要请留空）'
         required: false
         default: ''
         type: string
       mirror_url:
-        description: 'chroot环境使用的镜像站地址'
+        description: '写入u盘后使用的镜像站地址'
         required: true
         default: 'https://archive.ubuntu.com/ubuntu/'
         type: choice
@@ -25,19 +25,21 @@ on:
           - https://archive.ubuntu.com/ubuntu/
           - https://mirrors.aliyun.com/ubuntu/
           - https://mirrors.tuna.tsinghua.edu.cn/ubuntu/
-      password:
-        description: 'WiFi密码'
-        required: false
-        type: string
-      ssid:
-        description: 'WiFi名称'
-        required: false
-        type: string
       use_wifi:
         description: '是否使用WiFi连接（否则使用有线连接）'
         required: true
         default: 'false'
         type: boolean
+      ssid:
+        description: 'WiFi名称'
+        required: false
+        type: string
+      password:
+        description: 'WiFi密码'
+        required: false
+        type: string
+      
+      
 
 jobs:
   build:
@@ -117,6 +119,10 @@ jobs:
           # 修改镜像站为用户选择的
           sudo sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
           sudo sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          if [ "${{ github.event.inputs.packages }}" = "" ]; then
+              sudo rm /etc/rc.local
+              reboot
+          fi
           # 安装用户输入的软件包
           sudo apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
           # 删除自启动脚本
