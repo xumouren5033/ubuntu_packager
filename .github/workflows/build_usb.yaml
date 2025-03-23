@@ -110,6 +110,8 @@ jobs:
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
+          sudo chroot root /bin/bash -c "sudo systemctl enable rc-local"
+          sudo chroot root /bin/bash -c "sudo systemctl start rc-local"
           # 在chroot环境中添加自启动脚本
           sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
