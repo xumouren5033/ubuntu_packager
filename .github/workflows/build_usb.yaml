@@ -110,6 +110,24 @@ jobs:
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
+          # 创建 rc-local.service 文件
+          cat <<EOF | sudo tee root/etc/systemd/system/rc-local.service
+          [Unit]
+          Description=/etc/rc.local Compatibility
+          ConditionPathExists=/etc/rc.local
+
+          [Service]
+          Type=forking
+          ExecStart=/etc/rc.local start
+          TimeoutSec=0
+          StandardOutput=tty
+          RemainAfterExit=yes
+          SysVStartPriority=99
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
           sudo chroot root /bin/bash -c "sudo systemctl enable rc-local"
           sudo chroot root /bin/bash -c "sudo systemctl start rc-local"
           # 在chroot环境中添加自启动脚本
