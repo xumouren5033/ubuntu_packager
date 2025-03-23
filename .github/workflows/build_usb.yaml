@@ -94,7 +94,7 @@ jobs:
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp"
           
           # 复制内核文件和初始化RAM磁盘文件
           sudo cp /boot/vmlinuz root/boot/
@@ -136,6 +136,15 @@ jobs:
           if [ "${{ github.event.inputs.use_wifi }}" = "true" ]; then
               sudo nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
           fi
+          ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          timedatectl set-timezone Asia/Shanghai
+          
+          # 配置NTP服务器为阿里云NTP服务器
+          echo "server ntp1.aliyun.com" > /etc/ntp.conf
+          echo "server ntp2.aliyun.com" >> /etc/ntp.conf
+
+          # 重启NTP服务
+          systemctl restart ntp
           # 修改镜像站为用户选择的
           sudo sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
           sudo sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
