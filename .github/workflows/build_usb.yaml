@@ -112,15 +112,16 @@ jobs:
           sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
           if [ "${{ github.event.inputs.use_wifi }}" = "true" ]; then
-              nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
+              sudo nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
           fi
           # 修改镜像站为用户选择的
-          sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
-          sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          sudo sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          sudo sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
           # 安装用户输入的软件包
-          apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
+          sudo apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
           # 删除自启动脚本
-          rm /etc/rc.local
+          sudo rm /etc/rc.local
+          reboot
           EOF
           sudo chmod +x root/etc/rc.local
           sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
