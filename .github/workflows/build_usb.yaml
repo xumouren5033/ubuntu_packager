@@ -157,6 +157,7 @@ jobs:
           sudo rm -rf root/refind
           sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
+          sleep 10
           sudo rmdir root
 
       - name: 设置版本号
