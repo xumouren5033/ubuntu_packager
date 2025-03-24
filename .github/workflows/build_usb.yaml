@@ -94,7 +94,7 @@ jobs:
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp partclone"
           
           # 复制内核文件和初始化RAM磁盘文件
           sudo cp /boot/vmlinuz root/boot/
@@ -129,8 +129,8 @@ jobs:
           WantedBy=multi-user.target
           EOF
 
-          sudo chroot root /bin/bash -c "sudo systemctl enable rc-local"
-          sudo chroot root /bin/bash -c "sudo systemctl start rc-local"
+          
+          sudo cat << 'EOF' > root/usr/bin/ubuntu-install
           #!/bin/bash
 
           # 确保脚本以root权限运行
@@ -138,6 +138,37 @@ jobs:
               echo "该脚本需要root权限运行" 1>&2
               exit 1
           fi
+          sudo systemctl enable rc-local
+          sudo systemctl start rc-local
+
+          cat << 'INNER_EOF' > /etc/rc.local
+          #!/bin/bash
+          if [ "${{ github.event.inputs.use_wifi }}" = "true" ]; then
+              sudo nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
+          fi
+          ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          timedatectl set-timezone Asia/Shanghai
+          
+          # 配置NTP服务器为阿里云NTP服务器
+          echo "server ntp1.aliyun.com" > /etc/ntp.conf
+          echo "server ntp2.aliyun.com" >> /etc/ntp.conf
+
+          # 重启NTP服务
+          systemctl restart ntp
+          # 修改镜像站为用户选择的
+          sudo sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          sudo sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
+          if [ "${{ github.event.inputs.packages }}" = "" ]; then
+              sudo rm /etc/rc.local
+              reboot
+          fi
+          # 安装用户输入的软件包
+          sudo apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
+          # 删除自启动脚本
+          sudo rm /etc/rc.local
+          reboot
+          INNER_EOF
+          chmod +x /etc/rc.local
 
           # 获取目标磁盘
           target_disk=$(lsblk -d | grep -m 1 'sd' | awk '{print $1}')
@@ -199,35 +230,8 @@ jobs:
           sudo rmdir /mnt/target_root /mnt/target_efi
 
           echo "克隆完成"
-          # 在chroot环境中添加自启动脚本
-          sudo tee root/etc/rc.local <<EOF
-          #!/bin/bash
-          if [ "${{ github.event.inputs.use_wifi }}" = "true" ]; then
-              sudo nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
-          fi
-          ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-          timedatectl set-timezone Asia/Shanghai
-          
-          # 配置NTP服务器为阿里云NTP服务器
-          echo "server ntp1.aliyun.com" > /etc/ntp.conf
-          echo "server ntp2.aliyun.com" >> /etc/ntp.conf
-
-          # 重启NTP服务
-          systemctl restart ntp
-          # 修改镜像站为用户选择的
-          sudo sed -i 's|${{ github.event.inputs.mirror_url }}|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
-          sudo sed -i 's|${{ github.event.inputs.mirror_url }}|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
-          if [ "${{ github.event.inputs.packages }}" = "" ]; then
-              sudo rm /etc/rc.local
-              reboot
-          fi
-          # 安装用户输入的软件包
-          sudo apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
-          # 删除自启动脚本
-          sudo rm /etc/rc.local
-          reboot
           EOF
-          sudo chmod +x root/etc/rc.local
+          chmod +x root/usr/bin/ubuntu-install
           sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
           sudo umount -l root/dev
           sudo umount -l root/run
