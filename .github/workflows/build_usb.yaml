@@ -131,6 +131,74 @@ jobs:
 
           sudo chroot root /bin/bash -c "sudo systemctl enable rc-local"
           sudo chroot root /bin/bash -c "sudo systemctl start rc-local"
+          #!/bin/bash
+
+          # 确保脚本以root权限运行
+          if [ "$(id -u)" -ne 0 ]; then
+              echo "该脚本需要root权限运行" 1>&2
+              exit 1
+          fi
+
+          # 获取目标磁盘
+          target_disk=$(lsblk -d | grep -m 1 'sd' | awk '{print $1}')
+
+          # 检查目标磁盘是否存在
+          if [ -z "$target_disk" ]; then
+              echo "无法找到目标磁盘"
+              exit 1
+          fi
+
+          # 确认操作
+          echo "目标磁盘为 /dev/$target_disk，这将清除该磁盘上的所有数据。"
+          read -p "是否继续？(y/n): " confirm
+          if [ "$confirm" != "y" ]; then
+              echo "操作已取消"
+              exit 1
+          fi
+
+          # 清空目标磁盘
+          echo "清空目标磁盘 /dev/$target_disk..."
+          dd if=/dev/zero of=/dev/$target_disk bs=1M count=1
+
+          # 使用parted创建GPT分区表并分区
+          echo "创建GPT分区表并分区..."
+          sudo parted /dev/$target_disk --script \
+              mklabel gpt \
+              mkpart ESP fat32 1MiB 513MiB \
+              set 1 boot on \
+              mkpart primary ext4 513MiB 100%
+
+          # 等待分区表生效
+          sleep 5
+
+          # 格式化分区
+          echo "格式化分区..."
+          sudo mkfs.vfat -F32 /dev/${target_disk}1
+          sudo mkfs.ext4 /dev/${target_disk}2
+
+          # 挂载目标分区
+          echo "挂载目标分区..."
+          mkdir -p /mnt/target_root /mnt/target_efi
+          sudo mount /dev/${target_disk}2 /mnt/target_root
+          sudo mount /dev/${target_disk}1 /mnt/target_efi
+
+          # 使用partclone克隆EFI分区
+          echo "克隆EFI分区..."
+          sudo partclone.fat -c -s /efi.img -o /mnt/target_efi
+
+          # 使用partclone克隆根目录
+          echo "克隆根目录..."
+          sudo partclone.ext4 -c -s /dev/sda2 -o /mnt/target_root
+
+          # 卸载目标分区
+          echo "卸载目标分区..."
+          sudo umount /mnt/target_root
+          sudo umount /mnt/target_efi
+
+          # 删除挂载点目录
+          sudo rmdir /mnt/target_root /mnt/target_efi
+
+          echo "克隆完成"
           # 在chroot环境中添加自启动脚本
           sudo tee root/etc/rc.local <<EOF
           #!/bin/bash
