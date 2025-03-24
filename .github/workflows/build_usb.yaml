@@ -109,7 +109,7 @@ jobs:
           sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /dev/mapper/loop0p1"
           UUID=$(sudo blkid /dev/mapper/loop0p2 -o value -s UUID)
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
-          sudo sed -i '/^menuentry /a options root=/dev/mapper/loop0p2 rw quiet splash' /dev/mapper/loop0p1/EFI/BOOT/refind.conf
+          sudo sed -i '/^menuentry {/,/^}/ s/^options.*/options "root=PARTUUID=${LOOP0P2_UUID} rw quiet splash"/' root/dev/mapper/loop0p1/EFI/BOOT/refind.conf
           sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
       - name: 创建安装脚本
         run: |
