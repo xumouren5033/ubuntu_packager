@@ -38,4 +38,4 @@ jobs:
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
-          lsblk -o name,mountpoint
+          sudo chroot root /bin/bash -c "lsblk -o name,mountpoint"
