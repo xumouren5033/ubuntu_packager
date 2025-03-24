@@ -34,7 +34,7 @@ jobs:
       - name: 创建基础系统
         run: |
           cd ~/ubuntu-usb
-          sudo debootstrap --arch=amd64 ${{ github.event.inputs.ubuntu_version }} root https://archive.ubuntu.com/ubuntu/
+          sudo debootstrap --arch=amd64 noble root https://archive.ubuntu.com/ubuntu/
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
