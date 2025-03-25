@@ -71,9 +71,9 @@ jobs:
           # 使用 parted 创建分区表
           sudo parted ubuntu-usb.img --script \
             mklabel gpt \
-            mkpart ESP fat32 1MiB 513MiB \
+            mkpart ESP fat32 1MiB 101MiB \
             set 1 boot on \
-            mkpart primary ext4 513MiB 100%
+            mkpart primary ext4 101MiB 100%
             # 挂载镜像文件并格式化分区
             sudo kpartx -av ubuntu-usb.img
             sleep 5  # 等待设备映射完成
@@ -92,32 +92,35 @@ jobs:
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y libsystemd-shared=255.4-1ubuntu8.6 && apt-get install -y ntp partclone efibootmgr systemd-boot"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp partclone grub-pc"
           
-          
+      
       - name: 设置efi
         run: |
           cd ~/ubuntu-usb
           sudo mkdir -p root/mnt/efib
           sudo chroot root /bin/bash -c "mount /dev/mapper/loop0p1 /mnt/efib"
-          sudo mkdir -p root/mnt/efib/loader/entries/
-          sudo mkdir -p root/mnt/efib/boot
-          sudo cp /boot/vmlinuz root/mnt/efib/boot/
-          sudo cp /boot/initrd.img root/mnt/efib/boot/
-          sudo cp /boot/vmlinuz-* root/mnt/efib/boot/
-          sudo cp /boot/initrd.img-* root/mnt/efib/boot/
-          sudo chroot root /bin/bash -c "bootctl --path=/mnt/efib install"
-          UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s UUID")
+          
+          sudo mkdir -p root/boot
+          sudo cp /boot/vmlinuz root/boot/
+          sudo cp /boot/initrd.img root/boot/
+          sudo cp /boot/vmlinuz-* root/boot/
+          sudo cp /boot/initrd.img-* root/boot/
+          sudo chroot /mnt /bin/bash -c "grub-install /dev/mapper/loop0p1"
+          UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s PARTUUID")
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
-          cat <<EOF > root/mnt/efib/loader/entries/ubuntu.conf
-          title Ubuntu
-          linux /boot/vmlinuz
-          initrd /boot/initrd.img
-          options root=PARTUUID=${LOOP0P2_UUID} rw
+          cat << 'EOF' >> root/etc/grub.d/40_custom
+          menuentry 'Custom Linux' {
+              search --no-floppy --fs-uuid --set=root $PARTUUID
+              linux /boot/vmlinuz-$(uname -r) root=PARTUUID=$LOOP0P2_UUID ro quiet splash
+              initrd /boot/initrd.img-$(uname -r)
+          }
           EOF
-          sudo chroot root /bin/bash -c "umount -l /mnt/efib"
+          sudo chroot /mnt /bin/bash -c "chmod +x /etc/grub.d/40_custom"
+          sudo chroot /mnt /bin/bash -c "grub-mkconfig -o /mnt/efib/EFI/BOOT/grub.cfg"
           ls root/mnt/efib/EFI/BOOT
-          sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=512"
+          sudo chroot root /bin/bash -c "umount -l /mnt/efib"
+          sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
@@ -254,7 +257,6 @@ jobs:
           sudo umount -l root/dev
           sudo umount -l root/run
           sudo umount -l root/proc
-          sudo rm -rf root/refind
           sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
           sleep 10
