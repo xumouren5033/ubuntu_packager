@@ -100,7 +100,7 @@ jobs:
       - name: 设置efi
         run: |
           cd ~/ubuntu-usb
-          sudi mkdir -p root/sys/firmware/efi/efivars
+          sudo mkdir -p root/sys/firmware/efi/efivars
           sudo mount -t efivarfs efivarfs root/sys/firmware/efi/efivars
           sudo mkdir -p root/mnt/efib
           sudo chroot root /bin/bash -c "mount /dev/mapper/loop0p1 /mnt/efib"
