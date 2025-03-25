@@ -38,6 +38,10 @@ on:
         description: 'WiFi密码'
         required: false
         type: string
+      dsp:
+        description: '自定义安装脚本在仓库中的路径（以“/”作为路径分隔符）'
+        required: false
+        type: string
       
       
 
@@ -73,7 +77,7 @@ jobs:
             mklabel gpt \
             mkpart ESP fat32 1MiB 101MiB \
             set 1 boot on \
-            mkpart primary ext4 101MiB 100%
+            mkpart primary ext4 101MiB 99%
             # 挂载镜像文件并格式化分区
             sudo kpartx -av ubuntu-usb.img
             sleep 5  # 等待设备映射完成
@@ -122,6 +126,10 @@ jobs:
           sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
       - name: 创建安装脚本
         run: |
+          if [ "${{ github.event.inputs.dsp }}" != "" ]; then
+            sudo mkdir -p ~/ubuntu-usb/root/install
+            sudo cp ${{ github.event.inputs.dsp }} ~/ubuntu-usb/root/install/install.sh
+          fi
           cd ~/ubuntu-usb
           # 创建 rc-local.service 文件
           cat <<EOF | sudo tee root/etc/systemd/system/rc-local.service
@@ -176,6 +184,10 @@ jobs:
           fi
           # 安装用户输入的软件包
           sudo apt-get update && apt-get install -y ${{ github.event.inputs.packages }}
+          if [ "${{ github.event.inputs.dsp }}" != "" ]; then
+              sudo sh /install/install.sh
+              sudo rm -rf /install
+          fi
           # 删除自启动脚本
           sudo rm /etc/rc.local
           reboot
@@ -215,9 +227,9 @@ jobs:
           echo "创建GPT分区表并分区..."
           sudo parted /dev/$target_disk --script \
               mklabel gpt \
-              mkpart ESP fat32 1MiB 513MiB \
+              mkpart ESP fat32 1MiB 101MiB \
               set 1 boot on \
-              mkpart primary ext4 513MiB 100%
+              mkpart primary ext4 101MiB 99%
 
           # 等待分区表生效
           sleep 5
@@ -234,11 +246,11 @@ jobs:
           sudo mount /dev/${target_disk}1 /mnt/target_efi
 
           # 使用partclone克隆EFI分区
-          echo "克隆EFI分区..."
+          echo "正在写入EFI分区..."
           sudo partclone.fat -c -s /efi.img -o /mnt/target_efi
 
           # 使用partclone克隆根目录
-          echo "克隆根目录..."
+          echo "正在写入根目录..."
           sudo partclone.ext4 -c -s ${root_device} -o /mnt/target_root
 
           # 卸载目标分区
@@ -249,7 +261,9 @@ jobs:
           # 删除挂载点目录
           sudo rmdir /mnt/target_root /mnt/target_efi
 
-          echo "克隆完成"
+          echo "安装完成，系统将在5秒后重启"
+          sleep 5
+          reboot
           EOF
           sudo chmod +x root/usr/bin/ubuntu-install
           sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
