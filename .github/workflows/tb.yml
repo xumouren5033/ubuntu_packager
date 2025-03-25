@@ -28,4 +28,4 @@ jobs:
             sleep 5  # 等待设备映射完成
             sudo mkfs.fat -F 32 /dev/mapper/loop0p1
             sudo mkfs.ext4 /dev/mapper/loop0p2
-            blkid /dev/mapper/loop0p2 -o value -s PARTUUID
+            blkid /dev/mapper/loop0p2 -o value -s UUID
