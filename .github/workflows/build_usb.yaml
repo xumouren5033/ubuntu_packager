@@ -102,11 +102,12 @@ jobs:
           cd ~/ubuntu-usb
           sudo mkdir -p root/mnt/efib
           sudo chroot root /bin/bash -c "mount /dev/mapper/loop0p1 /mnt/efib"
-          sudo mkdir -p root/mnt/efib/EFI/ubuntu
-          sudo cp /boot/vmlinuz root/boot/
-          sudo cp /boot/initrd.img root/boot/
-          sudo cp /boot/vmlinuz-* root/boot/
-          sudo cp /boot/initrd.img-* root/boot/
+          sudo mkdir -p root/mnt/efib/loader/entries/
+          sudo mkdir -p root/mnt/efib/boot
+          sudo cp /boot/vmlinuz root/mnt/efib/boot/
+          sudo cp /boot/initrd.img root/mnt/efib/boot/
+          sudo cp /boot/vmlinuz-* root/mnt/efib/boot/
+          sudo cp /boot/initrd.img-* root/mnt/efib/boot/
           sudo chroot root /bin/bash -c "bootctl --path=/mnt/efib install"
           UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s UUID")
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
