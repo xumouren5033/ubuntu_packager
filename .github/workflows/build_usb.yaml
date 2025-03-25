@@ -251,7 +251,7 @@ jobs:
 
           echo "克隆完成"
           EOF
-          chmod +x root/usr/bin/ubuntu-install
+          sudo chmod +x root/usr/bin/ubuntu-install
           sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
           sudo umount -l root/dev
           sudo umount -l root/run
