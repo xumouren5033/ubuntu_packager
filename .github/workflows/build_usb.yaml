@@ -110,7 +110,7 @@ jobs:
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
           sudo chroot root /bin/bash -c "sudo grub-install --target=x86_64-efi --efi-directory=/mnt/efib --bootloader-id=GRUB"
-          mkdir -p /mnt/cr
+          sudo mkdir -p /mnt/cr
           sudo mount /dev/mapper/loop0p2 /mnt/cr
           blkid /dev/mapper/loop0p2
           UUID=$(blkid /dev/mapper/loop0p2 -o value -s PARTUUID)
