@@ -92,7 +92,7 @@ jobs:
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp partclone efibootmgr systemd-boot"
+          sudo chroot root /bin/bash -c "apt-get update && sudo apt install --only-upgrade libsystemd-shared && apt-get install -y ntp partclone efibootmgr systemd-boot"
           
           
       - name: 设置efi
