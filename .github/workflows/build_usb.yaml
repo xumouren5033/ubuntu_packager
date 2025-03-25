@@ -112,8 +112,8 @@ jobs:
           sudo chroot root /bin/bash -c "sudo grub-install --target=x86_64-efi --efi-directory=/mnt/efib --bootloader-id=GRUB"
           sudo mkdir -p /mnt/cr
           sudo mount /dev/mapper/loop0p2 /mnt/cr
-          blkid /dev/mapper/loop0p2
-          UUID=$(blkid /dev/mapper/loop0p2 -o value -s PARTUUID)
+          lsblk -rno PARTUUID /dev/mapper/loop0p2
+          UUID=$(lsblk -rno PARTUUID /dev/mapper/loop0p2)
           sudo umount -l /mnt/cr
           cat <<EOF | sudo tee -a root/etc/grub.d/40_custom
           menuentry 'Ubuntu USB' {
