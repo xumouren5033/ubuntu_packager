@@ -100,13 +100,12 @@ jobs:
           cd ~/ubuntu-usb
           sudo mkdir -p root/mnt/efib
           sudo chroot root /bin/bash -c "mount /dev/mapper/loop0p1 /mnt/efib"
-          
           sudo mkdir -p root/boot
           sudo cp /boot/vmlinuz root/boot/
           sudo cp /boot/initrd.img root/boot/
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
-          sudo chroot /mnt /bin/bash -c "grub-install /dev/mapper/loop0p1"
+          sudo chroot root /bin/bash -c "grub-install /dev/mapper/loop0p1"
           UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s PARTUUID")
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
           cat << 'EOF' >> root/etc/grub.d/40_custom
@@ -116,8 +115,8 @@ jobs:
               initrd /boot/initrd.img-$(uname -r)
           }
           EOF
-          sudo chroot /mnt /bin/bash -c "chmod +x /etc/grub.d/40_custom"
-          sudo chroot /mnt /bin/bash -c "grub-mkconfig -o /mnt/efib/EFI/BOOT/grub.cfg"
+          sudo chroot root /bin/bash -c "chmod +x /etc/grub.d/40_custom"
+          sudo chroot root /bin/bash -c "grub-mkconfig -o /mnt/efib/EFI/BOOT/grub.cfg"
           ls root/mnt/efib/EFI/BOOT
           sudo chroot root /bin/bash -c "umount -l /mnt/efib"
           sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
