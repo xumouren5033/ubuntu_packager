@@ -102,7 +102,7 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo mkdir -p root/mnt/efib
-          sudo chroot root /bin/bash -c "mount --bind /dev/mapper/loop0p1 /mnt/efib"
+          sudo chroot root /bin/bash -c "mount /dev/mapper/loop0p1 /mnt/efib"
           sudo mkdir -p root/mnt/efib/EFI/ubuntu
           sudo cp /boot/vmlinuz root/mnt/efib/EFI/ubuntu/
           sudo cp /boot/initrd.img root/mnt/efib/EFI/ubuntu/
