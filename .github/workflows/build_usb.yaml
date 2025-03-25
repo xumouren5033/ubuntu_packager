@@ -110,12 +110,12 @@ jobs:
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
           sudo chroot root /bin/bash -c "sudo grub-install --target=x86_64-efi --efi-directory=/mnt/efib --bootloader-id=GRUB"
+          sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s PARTUUID"
           UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s PARTUUID")
-          echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
           cat <<EOF | sudo tee -a root/etc/grub.d/40_custom
           menuentry 'Ubuntu USB' {
               search --no-floppy --fs-uuid --set=root $PARTUUID
-              linux /boot/vmlinuz-$(uname -r) root=PARTUUID=$LOOP0P2_UUID ro quiet splash
+              linux /boot/vmlinuz-$(uname -r) root=PARTUUID=$UUID ro quiet splash
               initrd /boot/initrd.img-$(uname -r)
           }
           EOF
