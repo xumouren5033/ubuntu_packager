@@ -175,8 +175,16 @@ jobs:
           INNER_EOF
           chmod +x /etc/rc.local
 
+          # 获取根目录所在设备路径
+          root_device=$(mount | grep ' / ' | awk '{print $1}')
+
           # 获取目标磁盘
           target_disk=$(lsblk -d | grep -m 1 'sd' | awk '{print $1}')
+
+          # 如果未获取到目标磁盘，则尝试使用根目录所在设备路径
+          if [ -z "$target_disk" ]; then
+              target_disk=${root_device//\/dev\//}
+          fi
 
           # 检查目标磁盘是否存在
           if [ -z "$target_disk" ]; then
@@ -224,7 +232,7 @@ jobs:
 
           # 使用partclone克隆根目录
           echo "克隆根目录..."
-          sudo partclone.ext4 -c -s /dev/sda2 -o /mnt/target_root
+          sudo partclone.ext4 -c -s ${root_device} -o /mnt/target_root
 
           # 卸载目标分区
           echo "卸载目标分区..."
