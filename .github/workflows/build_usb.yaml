@@ -100,7 +100,6 @@ jobs:
           
       - name: 设置efi
         run: |
-          
           cd ~/ubuntu-usb
           sudo mkdir -p root/mnt/efib
           sudo chroot root /bin/bash -c "mount --bind /dev/mapper/loop0p1 /mnt/efib"
@@ -112,7 +111,7 @@ jobs:
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
           sudo chroot root /bin/bash -c "sudo efibootmgr -c -d /dev/mapper/loop0p1 -p 1 -L 'Ubuntu' -l '/EFI/ubuntu/vmlinuz-*' -u 'root=PARTUUID=${LOOP0P2_UUID} ro quiet splash'"
           ls root/mnt/efib/EFI/BOOT
-          sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
+          sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=512"
           sudo chroot root /bin/bash -c "umount -l /mnt/efib"
       - name: 创建安装脚本
         run: |
