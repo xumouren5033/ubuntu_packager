@@ -90,6 +90,7 @@ jobs:
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
+          mount -t sysfs sysfs root/sys
           
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
@@ -106,11 +107,15 @@ jobs:
           sudo mkdir -p ~/ubuntu-usb/root/refind
           sudo cp -r refind/refind-bin-0.14.2/. ~/ubuntu-usb/root/refind
           cd ~/ubuntu-usb
+          sudo mkdir -p root/mnt/efib
+          sudo mount --bind /dev/mapper/loop0p1 root/mnt/efib
           sudo chroot root /bin/bash -c "/refind/refind-install --usedefault /dev/mapper/loop0p1"
           UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s UUID")
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
-          sudo sed -i '/^menuentry {/,/^}/ s/^options.*/options "root=PARTUUID=${LOOP0P2_UUID} rw quiet splash"/' root/dev/mapper/loop0p1/EFI/BOOT/refind.conf
+          ls root/mnt/efib/EFI/BOOT
+          sudo sed -i '/^menuentry {/,/^}/ s/^options.*/options "root=PARTUUID=${LOOP0P2_UUID} rw quiet splash"/' root/mnt/efib/EFI/BOOT/refind.conf
           sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
+          sudo umount -l root/mnt/efib
       - name: 创建安装脚本
         run: |
           cd ~/ubuntu-usb
@@ -239,6 +244,7 @@ jobs:
           sudo umount -l root/dev
           sudo umount -l root/run
           sudo umount -l root/proc
+          sudo umount -l root/sys
           sudo rm -rf root/refind
           sudo umount -l root
           sudo kpartx -dv ubuntu-usb.img
