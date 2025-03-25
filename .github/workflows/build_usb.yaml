@@ -92,7 +92,7 @@ jobs:
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp partclone grub-pc"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp partclone grub-efi-amd64 mtools e2fsprogs"
           
       
       - name: 设置efi
@@ -105,7 +105,7 @@ jobs:
           sudo cp /boot/initrd.img root/boot/
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
-          sudo chroot root /bin/bash -c "grub-install /dev/mapper/loop0p1"
+          sudo chroot root /bin/bash -c "sudo grub-install --target=x86_64-efi --efi-directory=/mnt/efib --bootloader-id=GRUB"
           UUID=$(sudo chroot root /bin/bash -c "blkid /dev/mapper/loop0p2 -o value -s PARTUUID")
           echo "LOOP0P2_UUID=$UUID" >> $GITHUB_ENV
           cat << 'EOF' >> root/etc/grub.d/40_custom
