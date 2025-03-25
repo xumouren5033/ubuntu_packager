@@ -28,4 +28,6 @@ jobs:
             sleep 5  # 等待设备映射完成
             sudo mkfs.fat -F 32 /dev/mapper/loop0p1
             sudo mkfs.ext4 /dev/mapper/loop0p2
-            lsblk
+            sudo mkdir /mnt/loop0p2
+            sudo mount /dev/mapper/loop0p2 /mnt/loop0p2
+            sudo blkid /dev/mapper/loop0p2
