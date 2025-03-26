@@ -263,7 +263,7 @@ jobs:
 
       - name: 压缩img镜像
         run: |
-          gzip -9 -k ~/ubuntu-usb/ubuntu-usb.img
+          gzip -8 -k ~/ubuntu-usb/ubuntu-usb.img
           sudo cp ~/ubuntu-usb/ubuntu-usb.img.gz ubuntu-usb.img.gz
 
       
