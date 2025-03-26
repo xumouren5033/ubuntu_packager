@@ -96,7 +96,7 @@ jobs:
 
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y ntp partclone grub-efi-amd64 mtools e2fsprogs"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ntp partclone grub-efi-amd64 mtools e2fsprogs"
           
       
       - name: 设置efi
@@ -110,20 +110,6 @@ jobs:
           sudo cp /boot/vmlinuz-* root/boot/
           sudo cp /boot/initrd.img-* root/boot/
           sudo chroot root /bin/bash -c "sudo grub-install --target=x86_64-efi --efi-directory=/mnt/efib --bootloader-id=GRUB"
-          sudo mkdir -p /mnt/cr
-          sudo mount /dev/mapper/loop0p2 /mnt/cr
-          UUID=$(lsblk -rno PARTUUID /dev/mapper/loop0p2)
-          sudo umount -l /mnt/cr
-          cat <<EOF | sudo tee -a root/etc/grub.d/40_custom
-          menuentry 'Ubuntu USB' {
-              search --no-floppy --fs-uuid --set=root $UUID
-              linux /boot/vmlinuz-$(uname -r) root=PARTUUID=$UUID ro quiet splash
-              initrd /boot/initrd.img-$(uname -r)
-          }
-          EOF
-          sudo chroot root /bin/bash -c "chmod +x /etc/grub.d/40_custom"
-          sudo chroot root /bin/bash -c "grub-mkconfig -o /mnt/efib/EFI/BOOT/grub.cfg"
-          ls root/mnt/efib/EFI/BOOT
           sudo chroot root /bin/bash -c "umount -l /mnt/efib"
           sudo chroot root /bin/bash -c "dd if=/dev/mapper/loop0p1 of=/efi.img bs=1M count=100"
       - name: 创建安装脚本
