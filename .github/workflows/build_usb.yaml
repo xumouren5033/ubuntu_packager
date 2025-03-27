@@ -25,19 +25,7 @@ on:
           - https://archive.ubuntu.com/ubuntu/
           - https://mirrors.aliyun.com/ubuntu/
           - https://mirrors.tuna.tsinghua.edu.cn/ubuntu/
-      use_wifi:
-        description: '是否使用WiFi连接（否则使用有线连接）'
-        required: true
-        default: 'false'
-        type: boolean
-      ssid:
-        description: 'WiFi名称'
-        required: false
-        type: string
-      password:
-        description: 'WiFi密码'
-        required: false
-        type: string
+      
       dsp:
         description: '自定义安装脚本在仓库中的路径（以“/”作为路径分隔符）'
         required: false
@@ -146,9 +134,7 @@ jobs:
 
           cat <<INNER_EOF | sudo tee /etc/rc.local
           #!/bin/bash
-          if [ "${{ github.event.inputs.use_wifi }}" = "true" ]; then
-              sudo nmcli dev wifi connect ${{ github.event.inputs.ssid }} password ${{ github.event.inputs.password }}
-          fi
+          
           ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
           timedatectl set-timezone Asia/Shanghai
           
