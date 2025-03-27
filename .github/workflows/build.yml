@@ -59,31 +59,15 @@ jobs:
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic live-boot systemd-sysv os-prober ${{ github.event.inputs.packages }}"
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ${{ github.event.inputs.packages }}"
 
-          echo "GRUB_DISABLE_OS_PROBER=false" | sudo tee -a chroot/etc/default/grub
-          sudo chroot chroot /bin/bash -c "update-grub"
-          sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
+          
           sudo pkill -9 -f "./chroot" || true
           sudo umount -l chroot/dev
           sudo umount -l chroot/run
           sudo umount -l chroot/proc
 
-          sudo mksquashfs chroot filesystem.squashfs -comp xz
-          sudo rm -rf chroot
-          mkdir -p ~/livecd/boot/grub
-          cat <<EOF > ~/livecd/boot/grub/grub.cfg
-          set timeout=5
-          set default=0
-
-          menuentry "Auto-Detect Linux Partition" {
-              search --file --set=root /boot
-              linux /boot/vmlinuz root=${root} ro quiet splash
-              initrd /boot/initrd.img
-          }
-          EOF
-
-          sudo grub-mkrescue -o ubuntu-livecd.iso ~/livecd
+          
 
       
       - name: 设置版本号
