@@ -134,7 +134,7 @@ jobs:
 
       - name: 分割boot.img
         run: |
-          split -b 100M ~/ubuntu-usb/boot.img ./boot_part_
+          split -b 1G ~/ubuntu-usb/boot.img ./boot_part_
 
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb_${{ matrix.ubuntu_version }}_${{ matrix.architecture }}" >> $GITHUB_ENV
