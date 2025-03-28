@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         ubuntu_version: [jammy, noble]
-        architecture: [amd64, i386]
+        architecture: [amd64, arm64]
     container:
       image: ubuntu:latest
       options: --platform linux/${{ matrix.architecture }}
