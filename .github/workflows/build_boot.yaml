@@ -46,6 +46,26 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo refind-install --usedefault boot.img
+      - name: 创建efi.img并复制boot.img内容
+        run: |
+          cd ~/ubuntu-usb
+          sudo dd if=/dev/zero of=root/efi.img bs=1M count=100
+          sudo parted efi.img --script \
+            mklabel gpt \
+            mkpart primary fat32 1MiB 100%
+          sudo kpartx -av efi.img
+          sleep 5
+          sudo mkfs.fat -F 32 /dev/mapper/loop2p1
+          sudo mkdir -p efi
+          sudo mount /dev/mapper/loop2p1 efi
+          sudo cp -r boot/* efi/
+          sudo umount -l efi
+          sudo kpartx -dv efi.img
+
+      - name: 复制宿主机内核文件到boot.img
+        run: |
+          cd ~/ubuntu-usb
+          sudo cp /boot/vmlinuz-$(uname -r) boot/vmlinuz
 
       - name: 创建initrd.img
         run: |
@@ -73,8 +93,8 @@ jobs:
 
       - name: 复制install目录到root目录
         run: |
+          sudo cp -r install ~/ubuntu-usb/root/install
           cd ~/ubuntu-usb
-          sudo cp -r ~/ubuntu-usb/install root/install
 
       - name: 启用rc-local服务并创建rc.local脚本
         run: |
