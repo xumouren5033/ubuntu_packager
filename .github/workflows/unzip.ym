@@ -1,0 +1,29 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main  # 监听触发部署的分支
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Unzip file
+      run: |
+        unzip -o path/to/your/file.zip -d path/to/destination  # 解压文件
+
+    - name: Set up Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Deploy to GitHub Repository
+      run: |
+        git add .
+        git commit -m "unzip"
+        git push
