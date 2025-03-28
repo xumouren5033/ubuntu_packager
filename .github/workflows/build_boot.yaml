@@ -1,10 +1,8 @@
 name: 构建U盘引导
 
 on:
-  push:
-  #schedule:
-    
-    #- cron: '0 * * * *'
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
   build:
@@ -12,7 +10,7 @@ jobs:
     strategy:
       matrix:
         ubuntu_version: [jammy, noble]
-        architecture: [amd64, arm64]
+        architecture: [amd64]
     
     steps:
       - name: 清理磁盘空间
