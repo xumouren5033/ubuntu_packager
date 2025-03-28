@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, emit
 import os
 import subprocess
@@ -61,6 +61,8 @@ def perform_partition_operations(disk):
     create_partitions(disk)
     # 挂载 ext4 分区
     mount_ext4_partition(disk)
+    # 将 /efi.img 写入 ESP 分区
+    write_efi_img_to_esp_partition(disk)
     # 通知前端操作完成
     socketio.emit('partition_operations_finished', {'status': 'finished'})
 
@@ -83,6 +85,11 @@ def mount_ext4_partition(disk):
     if not os.path.exists(mount_point):
         os.makedirs(mount_point)
     command = f'sudo mount /dev/{disk}2 {mount_point}'
+    run_command(command)
+
+def write_efi_img_to_esp_partition(disk):
+    # 将 /efi.img 写入 ESP 分区
+    command = f'sudo dd if=/efi.img of=/dev/{disk}1 bs=4M'
     run_command(command)
 
 def run_command(command):
@@ -109,7 +116,7 @@ def extract_tar_gz(file_path):
 
 def get_sd_disks():
     output = subprocess.check_output(['lsblk', '-dn', '-o', 'NAME']).decode()
-    disks = [line.strip() for line in output.splitlines() if line.startswith('sd')]
+    disks = [line.strip()[:3] for line in output.splitlines() if line.startswith('sd')]
     return disks
 
 if __name__ == '__main__':
