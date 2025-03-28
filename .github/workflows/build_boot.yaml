@@ -17,11 +17,11 @@ jobs:
       image: ubuntu:latest
       options: --platform linux/${{ matrix.architecture }}
     steps:
-      - name: 清理磁盘空间
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
+      #- name: 清理磁盘空间
+        #uses: jlumbroso/free-disk-space@main
+        #with:
+          #tool-cache: false
+          #android: true
 
       - name: 检出仓库
         uses: actions/checkout@v4
