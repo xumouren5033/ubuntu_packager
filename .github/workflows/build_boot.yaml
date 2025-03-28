@@ -37,15 +37,12 @@ jobs:
           sudo dd if=/dev/zero of=boot.img bs=1M count=5120
           
           sudo mkfs.fat -F 32 boot.img
-          sudo kpartx -av boot.img
-          sleep 5
           
 
       - name: 安装rEFInd
         run: |
           cd ~/ubuntu-usb
-          sudo refind-install --usedefault /dev/mapper/loop0p1
-          sudo kpartx -dv boot.img
+          sudo refind-install --usedefault boot.img
           sleep 5
           sudo mkdir -p boot
           sudo mount boot.img boot
