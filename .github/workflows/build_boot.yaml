@@ -27,19 +27,19 @@ jobs:
       - name: 安装依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y debootstrap xorriso mtools e2fsprogs refind
+          sudo apt-get install -y debootstrap xorriso mtools e2fsprogs refind parted exfat-utils
 
       - name: 创建boot.img
         run: |
           mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=boot.img bs=1M count=6144
+          sudo dd if=/dev/zero of=boot.img bs=1M count=5120
           sudo parted boot.img --script \
             mklabel gpt \
-            mkpart primary fat32 1MiB 100%
+            mkpart primary exfat 1MiB 100%
           sudo kpartx -av boot.img
           sleep 5
-          sudo mkfs.fat -F 32 /dev/mapper/loop0p1
+          sudo mkfs.exfat /dev/mapper/loop0p1
           sudo mkdir -p boot
           sudo mount /dev/mapper/loop0p1 boot
 
