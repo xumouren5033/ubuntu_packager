@@ -1,10 +1,8 @@
-name: Deploy
+name: unzip
 
 on:
   push:
-    branches:
-      - main  # 监听触发部署的分支
-
+    
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,7 +13,7 @@ jobs:
 
     - name: Unzip file
       run: |
-        unzip -o path/to/your/file.zip -d path/to/destination  # 解压文件
+        unzip -o prefind-bin-gnuefi-0_1742632877678.zip -d .  # 解压文件
 
     - name: Set up Git
       run: |
