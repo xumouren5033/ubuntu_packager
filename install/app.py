@@ -89,7 +89,7 @@ def mount_ext4_partition(disk):
 
 def write_efi_img_to_esp_partition(disk):
     # 将 /efi.img 写入 ESP 分区
-    command = f'sudo dd if=/efi.img of=/dev/{disk}1 bs=4M'
+    command = f'sudo dd if=/efi.img of=/dev/{disk}1 bs=1M'
     run_command(command)
 
 def run_command(command):
