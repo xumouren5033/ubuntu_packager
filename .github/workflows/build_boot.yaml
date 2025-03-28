@@ -1,6 +1,7 @@
 name: 构建U盘引导
 
 on:
+  push:
   schedule:
     # 每晚 12 点触发
     - cron: '0 0 * * *'
