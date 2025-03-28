@@ -56,9 +56,9 @@ jobs:
             mkpart primary fat32 1MiB 100%
           sudo kpartx -av efi.img
           sleep 5
-          sudo mkfs.fat -F 32 /dev/mapper/loop2p1
+          sudo mkfs.fat -F 32 /dev/mapper/loop1p1
           sudo mkdir -p efi
-          sudo mount /dev/mapper/loop2p1 efi
+          sudo mount /dev/mapper/loop1p1 efi
           sudo cp -r boot/* efi/
           sudo umount -l efi
           sudo kpartx -dv efi.img
