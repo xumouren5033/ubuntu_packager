@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>磁盘操作</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+            socket.on('command_output', function(data) {
+                var logArea = document.getElementById('log-area');
+                logArea.value += data.output;
+                logArea.scrollTop = logArea.scrollHeight;
+            });
+
+            socket.on('partition_operations_finished', function(data) {
+                alert('磁盘操作完成，即将跳转到上传页面');
+                window.location.href = '/upload';
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>磁盘操作</h1>
+    <form action="/partition_and_upload" method="post">
+        <label for="disk">选择磁盘：</label>
+        <select name="disk" id="disk">
+            {% for disk in disks %}
+                <option value="{{ disk }}">{{ disk }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="开始操作">
+    </form>
+    <h2>日志输出</h2>
+    <textarea id="log-area" rows="10" cols="50" readonly></textarea>
+</body>
+</html>
