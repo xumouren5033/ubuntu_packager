@@ -46,7 +46,7 @@ jobs:
       - name: 安装rEFInd
         run: |
           cd ~/ubuntu-usb
-          sudo refind-install --usedefault boot.img
+          sudo refind-install --usedefault /dev/mapper/loop0p1
       - name: 创建efi.img并复制boot.img内容
         run: |
           cd ~/ubuntu-usb
