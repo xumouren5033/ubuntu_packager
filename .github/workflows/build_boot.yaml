@@ -50,7 +50,7 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo dd if=boot.img of=efi.img bs=1M count=100
-          sudo cp efi.img root/efi.img
+          
 
       - name: 复制宿主机内核文件到boot.img
         run: |
@@ -70,6 +70,7 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo debootstrap --arch=${{ matrix.architecture }} ${{ matrix.ubuntu_version }} root
+          sudo cp efi.img root/efi.img
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
