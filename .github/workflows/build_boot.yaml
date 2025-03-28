@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         ubuntu_version: [jammy, noble]
-        architecture: [amd64, i386]
+        architecture: [amd64]
 
     steps:
       - name: 清理磁盘空间
