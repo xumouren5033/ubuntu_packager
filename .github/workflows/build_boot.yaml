@@ -2,7 +2,7 @@ name: 构建U盘引导
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   build:
@@ -135,7 +135,7 @@ jobs:
           split -b 1G ~/ubuntu-usb/boot.img ./boot_part_
 
       - name: 设置版本号
-        run: echo "VERSION=$(date+"%Y%m%d_%H-%M")_usb_${{ matrix.ubuntu_version }}_${{ matrix.architecture }}" >> $GITHUB_ENV
+        run: echo "VERSION=$(date+"%Y%m%d")_usb_${{ matrix.ubuntu_version }}_${{ matrix.architecture }}" >> $GITHUB_ENV
 
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
