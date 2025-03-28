@@ -2,7 +2,8 @@ name: 定时构建自定义chroot
 on:
   schedule:
     - cron: '0 0 * * *'
-
+env:
+  PKG: "git nginx python3-pip"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,7 +35,7 @@ jobs:
           set -e
           mkdir -p ~/livecd
           cd ~/livecd
-          sudo debootstrap --arch=${{ github.event.inputs.arch }} ${{ github.event.inputs.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
+          sudo debootstrap --arch=${{ matrix.architecture }} ${{ matrix.ubuntu_version }}} chroot http://archive.ubuntu.com/ubuntu/
 
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
@@ -43,7 +44,7 @@ jobs:
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
-          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ${{ github.event.inputs.packages }}"
+          sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ${{ env.PKG }}"
 
           
           sudo pkill -9 -f "./chroot" || true
