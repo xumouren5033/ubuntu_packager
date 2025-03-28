@@ -94,7 +94,12 @@ jobs:
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
           sudo chroot root /bin/bash -c "apt-get update && apt-get install -y python3-pip"
-          sudo chroot root /bin/bash -c "pip3 install --break-system-packages flask"
+          if [ "${{ matrix.ubuntu_version }}" = "noble" ]; then
+              sudo chroot root /bin/bash -c "pip3 install --break-system-packages flask"
+          else
+              sudo chroot root /bin/bash -c "pip3 install flask"
+          fi
+          
 
       - name: 复制install目录到root目录
         run: |
