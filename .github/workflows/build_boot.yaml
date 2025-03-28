@@ -26,6 +26,8 @@ jobs:
 
       - name: 安装依赖
         run: |
+          echo "deb https://archive.ubuntu.com/ubuntu/ noble universe" | sudo tee -a /etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/ noble-updates universe" | sudo tee -a /etc/apt/sources.list
           sudo apt-get update
           sudo apt-get install -y debootstrap xorriso mtools e2fsprogs refind parted exfat-utils
 
