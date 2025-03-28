@@ -75,12 +75,14 @@ jobs:
 
       - name: 压缩
         run: |
-          sudo tar -czvf ./ubuntu_chroot.tar.gz ~/livecd/chroot/.
-          sudo rm -rf ~/livecd
+          cd ~/livecd/chroot
+          sudo tar -czvf ../ubuntu_chroot.tar.gz .
+          cd ..
+          sudo rm -rf chroot
       - name: 分割文件
         run: |
           # 假设需要分割的文件是 largefile.zip
-          split -b 1G ./ubuntu_chroot.tar.gz ./part_  # 按 1GB 分割文件
+          split -b 1G ~/livecd/ubuntu_chroot.tar.gz ./part_  # 按 1GB 分割文件
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
         with:
