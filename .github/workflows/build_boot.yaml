@@ -35,36 +35,25 @@ jobs:
           mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
           sudo dd if=/dev/zero of=boot.img bs=1M count=5120
-          sudo parted boot.img --script \
-            mklabel gpt \
-            mkpart primary fat32 1MiB 100%
+          
+          sudo mkfs.fat -F 32 boot.img
           sudo kpartx -av boot.img
           sleep 5
-          sudo mkfs.fat -F 32 /dev/mapper/loop0p1
           
 
       - name: 安装rEFInd
         run: |
           cd ~/ubuntu-usb
           sudo refind-install --usedefault /dev/mapper/loop0p1
+          sudo kpartx -dv boot.img
+          sleep 5
           sudo mkdir -p boot
-          sudo mount /dev/mapper/loop0p1 boot
+          sudo mount boot.img boot
       - name: 创建efi.img并复制boot.img内容
         run: |
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=efi.img bs=1M count=100
-          sudo parted efi.img --script \
-            mklabel gpt \
-            mkpart primary fat32 1MiB 100%
-          sudo kpartx -av efi.img
-          sleep 5
-          sudo mkfs.fat -F 32 /dev/mapper/loop1p1
-          sudo mkdir -p efi
-          sudo mount /dev/mapper/loop1p1 efi
-          sudo cp -r boot/* efi/
-          sudo umount -l efi
-          sudo kpartx -dv efi.img
-          sleep 5
+          sudo dd if=boot.img of=efi.img bs=1M count=100
+          sudo cp efi.img root/efi.img
 
       - name: 复制宿主机内核文件到boot.img
         run: |
@@ -75,14 +64,10 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo dd if=/dev/zero of=initrd.img bs=1M count=3072
-          sudo parted initrd.img --script \
-            mklabel gpt \
-            mkpart primary ext4 1MiB 100%
-          sudo kpartx -av initrd.img
-          sleep 5
-          sudo mkfs.ext4 /dev/mapper/loop1p1
+          
+          sudo mkfs.ext4 initrd.img
           sudo mkdir -p root
-          sudo mount /dev/mapper/loop1p1 root
+          sudo mount initrd.img root
 
       - name: 创建基础系统
         run: |
@@ -142,15 +127,10 @@ jobs:
         run: |
           cd ~/ubuntu-usb
           sudo umount -l root
-          sudo kpartx -dv initrd.img
-          sleep 5
           sudo rm -rf root
           sudo cp initrd.img boot/initrd.img
           sudo rm -f initrd.img
-          sleep 5
           sudo umount -l boot
-          sleep 5
-          sudo kpartx -dv boot.img
           sleep 5
           sudo rm -rf boot
 
