@@ -62,6 +62,7 @@ jobs:
           sudo cp -r boot/* efi/
           sudo umount -l efi
           sudo kpartx -dv efi.img
+          sleep 5
 
       - name: 复制宿主机内核文件到boot.img
         run: |
@@ -134,14 +135,18 @@ jobs:
           cd ~/ubuntu-usb
           sudo umount -l root
           sudo kpartx -dv initrd.img
+          sleep 5
+          sudo rm -rf root
           sudo cp initrd.img boot/initrd.img
+          sudo rm -f initrd.img
           sudo umount -l boot
           sudo kpartx -dv boot.img
+          sleep 5
+          sudo rm -rf boot
 
       - name: 分割boot.img
         run: |
-          cd ~/ubuntu-usb
-          split -b 100M boot.img boot_part_
+          split -b 100M ~/ubuntu-usb/boot.img ./boot_part_
 
       - name: 设置版本号
         run: echo "VERSION=v${{ github.run_number }}_usb_${{ matrix.ubuntu_version }}_${{ matrix.architecture }}" >> $GITHUB_ENV
