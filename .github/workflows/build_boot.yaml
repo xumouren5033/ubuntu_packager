@@ -147,7 +147,9 @@ jobs:
           sudo rm -rf root
           sudo cp initrd.img boot/initrd.img
           sudo rm -f initrd.img
+          sleep 5
           sudo umount -l boot
+          sleep 5
           sudo kpartx -dv boot.img
           sleep 5
           sudo rm -rf boot
