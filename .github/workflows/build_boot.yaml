@@ -72,7 +72,7 @@ jobs:
       - name: 创建initrd.img
         run: |
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=initrd.img bs=1M count=4096
+          sudo dd if=/dev/zero of=initrd.img bs=1M count=3072
           sudo parted initrd.img --script \
             mklabel gpt \
             mkpart primary ext4 1MiB 100%
