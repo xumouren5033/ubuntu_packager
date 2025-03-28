@@ -13,15 +13,13 @@ jobs:
       matrix:
         ubuntu_version: [jammy, noble]
         architecture: [amd64, arm64]
-    container:
-      image: ubuntu:latest
-      options: --platform linux/${{ matrix.architecture }}
+    
     steps:
-      #- name: 清理磁盘空间
-        #uses: jlumbroso/free-disk-space@main
-        #with:
-          #tool-cache: false
-          #android: true
+      - name: 清理磁盘空间
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
 
       - name: 检出仓库
         uses: actions/checkout@v4
@@ -29,81 +27,81 @@ jobs:
       - name: 安装依赖
         run: |
           
-          apt-get update
-          apt-get install -y debootstrap xorriso mtools e2fsprogs refind
+          sudo apt-get update
+          sudo apt-get install -y debootstrap xorriso mtools e2fsprogs refind
 
       - name: 创建boot.img
         run: |
-          mkdir -p ~/ubuntu-usb
+          sudo mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
-          dd if=/dev/zero of=boot.img bs=1M count=5120
+          sudo dd if=/dev/zero of=boot.img bs=1M count=5120
           
-          mkfs.fat -F 32 boot.img
+          sudo mkfs.fat -F 32 boot.img
           
 
       - name: 安装rEFInd
         run: |
           cd ~/ubuntu-usb
-          refind-install --usedefault boot.img
+          sudo refind-install --usedefault boot.img
           sleep 5
-          mkdir -p boot
-          mount boot.img boot
+          sudo mkdir -p boot
+          sudo mount boot.img boot
       - name: 创建efi.img并复制boot.img内容
         run: |
           cd ~/ubuntu-usb
-          dd if=boot.img of=efi.img bs=1M count=100
+          sudo dd if=boot.img of=efi.img bs=1M count=100
           
 
       - name: 复制宿主机内核文件到boot.img
         run: |
-          cd ~/ubuntu-usb
-          cp /boot/vmlinuz-$(uname -r) boot/vmlinuz
+          sudo cd ~/ubuntu-usb
+          sudo cp /boot/vmlinuz-$(uname -r) boot/vmlinuz
 
       - name: 创建initrd.img
         run: |
           cd ~/ubuntu-usb
-          dd if=/dev/zero of=initrd.img bs=1M count=3072
+          sudo dd if=/dev/zero of=initrd.img bs=1M count=3072
           
-          mkfs.ext4 initrd.img
-          mkdir -p root
-          mount initrd.img root
+          sudo mkfs.ext4 initrd.img
+          sudo mkdir -p root
+          sudo mount initrd.img root
 
       - name: 创建基础系统
         run: |
           cd ~/ubuntu-usb
-          debootstrap --arch=${{ matrix.architecture }} ${{ matrix.ubuntu_version }} root
-          cp efi.img root/efi.img
-          mount --bind /dev root/dev
-          mount --bind /run root/run
-          mount --bind /proc root/proc
-          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }} universe" | tee -a root/etc/apt/sources.list
-          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }}-updates universe" | tee -a root/etc/apt/sources.list
-          chroot root /bin/bash -c "apt-get update && apt-get install -y python3-pip"
+          sudo debootstrap --arch=${{ matrix.architecture }} ${{ matrix.ubuntu_version }} root
+          sudo cp efi.img root/efi.img
+          sudo mount --bind /dev root/dev
+          sudo mount --bind /run root/run
+          sudo mount --bind /proc root/proc
+          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y python3-pip"
           if [ "${{ matrix.ubuntu_version }}" = "noble" ]; then
-              chroot root /bin/bash -c "pip3 install --break-system-packages flask"
+              sudo chroot root /bin/bash -c "pip3 install --break-system-packages flask"
           else
-              chroot root /bin/bash -c "pip3 install flask"
+              sudo chroot root /bin/bash -c "pip3 install flask"
           fi
           
 
       - name: 复制install目录到root目录
         run: |
-          cp -r install ~/ubuntu-usb/root/install
+          sudo cp -r install ~/ubuntu-usb/root/install
           cd ~/ubuntu-usb
 
       - name: 启用rc-local服务并创建rc.local脚本
         run: |
           cd ~/ubuntu-usb
           # 创建 rc.local 脚本
-          cat <<EOF | tee root/etc/rc.local
+          cat <<EOF | sudo tee root/etc/rc.local
           #!/bin/bash
           # rc.local script to run app.py on startup
           cd /install
           python3 app.py
           EOF
-          chmod +x root/etc/rc.local
+          sudo chmod +x root/etc/rc.local
           # 创建 systemd 服务文件
-          cat <<EOF | tee root/etc/systemd/system/rc-local.service
+          cat <<EOF | sudo tee root/etc/systemd/system/rc-local.service
           [Unit]
           Description=/etc/rc.local Compatibility
           ConditionPathExists=/etc/rc.local
@@ -120,19 +118,19 @@ jobs:
           WantedBy=multi-user.target
           EOF
           # 启用 rc-local 服务
-          chroot root /bin/bash -c "systemctl enable rc-local.service"
-          chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
+          sudo chroot root /bin/bash -c "systemctl enable rc-local.service"
+          sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
 
       - name: 复制initrd.img到boot.img
         run: |
           cd ~/ubuntu-usb
-          umount -l root
-          rm -rf root
-          cp initrd.img boot/initrd.img
-          rm -f initrd.img
-          umount -l boot
+          sudo umount -l root
+          sudo rm -rf root
+          sudo cp initrd.img boot/initrd.img
+          sudo rm -f initrd.img
+          sudo umount -l boot
           sleep 5
-          rm -rf boot
+          sudo rm -rf boot
 
       - name: 分割boot.img
         run: |
@@ -153,4 +151,4 @@ jobs:
 
       - name: 清理工作目录
         run: |
-          rm -rf ~/ubuntu-usb
+           sudo rm -rf ~/ubuntu-usb
