@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir -p ~/ubuntu-usb
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=boot.img bs=1M count=5120
+          sudo dd if=/dev/zero of=boot.img bs=1M count=6144
           sudo parted boot.img --script \
             mklabel gpt \
             mkpart primary fat32 1MiB 100%
@@ -72,7 +72,7 @@ jobs:
       - name: 创建initrd.img
         run: |
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=initrd.img bs=1M count=3072
+          sudo dd if=/dev/zero of=initrd.img bs=1M count=4096
           sudo parted initrd.img --script \
             mklabel gpt \
             mkpart primary ext4 1MiB 100%
