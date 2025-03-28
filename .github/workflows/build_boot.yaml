@@ -41,13 +41,14 @@ jobs:
           sudo kpartx -av boot.img
           sleep 5
           sudo mkfs.ntfs -f /dev/mapper/loop0p1
-          sudo mkdir -p boot
-          sudo mount -t ntfs-3g /dev/mapper/loop0p1 boot
+          
 
       - name: 安装rEFInd
         run: |
           cd ~/ubuntu-usb
           sudo refind-install --usedefault /dev/mapper/loop0p1
+          sudo mkdir -p boot
+          sudo mount -t ntfs-3g /dev/mapper/loop0p1 boot
       - name: 创建efi.img并复制boot.img内容
         run: |
           cd ~/ubuntu-usb
