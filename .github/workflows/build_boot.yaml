@@ -89,8 +89,8 @@ jobs:
           sudo mount --bind /dev root/dev
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
-          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
-          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
+          echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
           sudo chroot root /bin/bash -c "apt-get update && apt-get install -y linux-image-generic python3-pip"
           sudo chroot root /bin/bash -c "pip3 install flask"
 
