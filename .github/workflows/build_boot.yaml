@@ -1,10 +1,10 @@
 name: 构建U盘引导
 
 on:
-  
-  schedule:
+  push:
+  #schedule:
     
-    - cron: '0 * * * *'
+    #- cron: '0 * * * *'
 
 jobs:
   build:
@@ -12,8 +12,10 @@ jobs:
     strategy:
       matrix:
         ubuntu_version: [jammy, noble]
-        architecture: [amd64]
-
+        architecture: [amd64, i386]
+    container:
+      image: ubuntu:latest
+      options: --platform linux/${{ matrix.architecture }}
     steps:
       - name: 清理磁盘空间
         uses: jlumbroso/free-disk-space@main
