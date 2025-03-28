@@ -13,7 +13,7 @@ jobs:
 
     - name: Unzip file
       run: |
-        unzip -o prefind-bin-gnuefi-0_1742632877678.zip -d .  # 解压文件
+        unzip -o refind-bin-gnuefi-0_1742632877678.zip -d .  # 解压文件
 
     - name: Set up Git
       run: |
