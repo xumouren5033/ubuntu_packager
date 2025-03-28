@@ -38,12 +38,12 @@ jobs:
           sudo dd if=/dev/zero of=boot.img bs=1M count=5120
           sudo parted boot.img --script \
             mklabel gpt \
-            mkpart primary exfat 1MiB 100%
+            mkpart primary ntfs 1MiB 100%
           sudo kpartx -av boot.img
           sleep 5
-          sudo mkfs.exfat /dev/mapper/loop0p1
+          sudo mkfs.ntfs -f /dev/mapper/loop0p1
           sudo mkdir -p boot
-          sudo mount /dev/mapper/loop0p1 boot
+          sudo mount -t ntfs-3g /dev/mapper/loop0p1 boot
 
       - name: 安装rEFInd
         run: |
