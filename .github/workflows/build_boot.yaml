@@ -90,7 +90,7 @@ jobs:
           sudo mount --bind /run root/run
           sudo mount --bind /proc root/proc
 
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y linux-image-generic"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y linux-image-generic && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3 get-pip.py"
           sudo chroot root /bin/bash -c "pip3 install flask"
 
       - name: 复制install目录到root目录
