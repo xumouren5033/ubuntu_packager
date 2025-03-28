@@ -37,10 +37,10 @@ jobs:
           sudo dd if=/dev/zero of=boot.img bs=1M count=5120
           sudo parted boot.img --script \
             mklabel gpt \
-            mkpart primary ntfs 1MiB 100%
+            mkpart primary fat32 1MiB 100%
           sudo kpartx -av boot.img
           sleep 5
-          sudo mkfs.ntfs -f /dev/mapper/loop0p1
+          sudo mkfs.fat -F 32 /dev/mapper/loop0p1
           
 
       - name: 安装rEFInd
@@ -48,7 +48,7 @@ jobs:
           cd ~/ubuntu-usb
           sudo refind-install --usedefault /dev/mapper/loop0p1
           sudo mkdir -p boot
-          sudo mount -t ntfs-3g /dev/mapper/loop0p1 boot
+          sudo mount /dev/mapper/loop0p1 boot
       - name: 创建efi.img并复制boot.img内容
         run: |
           cd ~/ubuntu-usb
@@ -74,7 +74,7 @@ jobs:
       - name: 创建initrd.img
         run: |
           cd ~/ubuntu-usb
-          sudo dd if=/dev/zero of=initrd.img bs=1M count=4096
+          sudo dd if=/dev/zero of=initrd.img bs=1M count=3072
           sudo parted initrd.img --script \
             mklabel gpt \
             mkpart primary ext4 1MiB 100%
@@ -93,7 +93,7 @@ jobs:
           sudo mount --bind /proc root/proc
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }} universe" | sudo tee -a root/etc/apt/sources.list
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
-          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y linux-image-generic python3-pip"
+          sudo chroot root /bin/bash -c "apt-get update && apt-get install -y python3-pip"
           sudo chroot root /bin/bash -c "pip3 install --break-system-packages flask"
 
       - name: 复制install目录到root目录
