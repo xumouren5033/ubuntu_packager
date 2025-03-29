@@ -1,4 +1,5 @@
 import requests
+import subprocess
 
 def delete_releases(owner, repo, token):
     headers = {
@@ -20,9 +21,21 @@ def delete_releases(owner, repo, token):
         else:
             print(f"Failed to delete release {release_id}: {response.status_code}")
 
+def delete_tags(owner, repo, token):
+    # 获取所有标签
+    tags = subprocess.check_output(["git", "ls-remote", "--tags", f"https://github.com/{owner}/{repo}.git"]).decode("utf-8").splitlines()
+    tags = [tag.split("/")[-1].strip("^{}") for tag in tags]
+
+    # 删除每个标签
+    for tag in tags:
+        subprocess.run(["git", "tag", "-d", tag])
+        subprocess.run(["git", "push", "origin", "--delete", tag])
+        print(f"Deleted tag {tag}")
+
 if __name__ == "__main__":
     import os
     owner = os.getenv("GITHUB_REPOSITORY_OWNER")
     repo = os.getenv("GITHUB_REPOSITORY").split("/")[1]
     token = os.getenv("GITHUB_TOKEN")
     delete_releases(owner, repo, token)
+    delete_tags(owner, repo, token)
