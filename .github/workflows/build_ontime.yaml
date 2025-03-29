@@ -72,7 +72,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}  # 使用推送的标签名
           name: ${{ env.VERSION }}  # Release 名称
-          body: "请先下载以part开头的文件，然后运行copy /b part_* rootfs.tar.gz（Windows系统命令）以合并文件"  # Release 描述
+          body: "请先下载以part开头的所有文件，然后运行copy /b part_* rootfs.tar.gz（Windows系统命令）以合并文件"  # Release 描述
           files: |
             ./part_*
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
