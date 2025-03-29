@@ -81,8 +81,6 @@ jobs:
           sudo rm -rf chroot
       - name: 分割文件
         run: |
-          tar -tzf ~/livecd/ubuntu_chroot.tar.gz | awk -F'/' '{print $1}' | sort -u
-          # 假设需要分割的文件是 largefile.zip
           split -b 1G ~/livecd/ubuntu_chroot.tar.gz ./part_  # 按 1GB 分割文件
       - name: 创建并上传 Release
         uses: softprops/action-gh-release@v1
