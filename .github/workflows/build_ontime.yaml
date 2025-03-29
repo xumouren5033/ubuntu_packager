@@ -35,7 +35,7 @@ jobs:
           set -e
           mkdir -p ~/livecd
           cd ~/livecd
-          sudo debootstrap --arch=${{ matrix.architecture }} ${{ matrix.ubuntu_version }}} chroot http://archive.ubuntu.com/ubuntu/
+          sudo debootstrap --arch=${{ matrix.architecture }} ${{ matrix.ubuntu_version }} chroot http://archive.ubuntu.com/ubuntu/
 
           sudo mount --bind /dev chroot/dev
           sudo mount --bind /run chroot/run
