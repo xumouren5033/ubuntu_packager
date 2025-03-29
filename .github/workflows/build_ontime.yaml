@@ -41,8 +41,8 @@ jobs:
           sudo mount --bind /run chroot/run
           sudo mount --bind /proc chroot/proc
 
-          echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
-          echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu ${{ matrix.ubuntu_version }} universe" | sudo tee -a chroot/etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ${{ env.PKG }}"
 
@@ -61,7 +61,7 @@ jobs:
       - name: 压缩
         run: |
           cd ~/livecd/chroot
-          ls -a | xargs sudo tar -czvf ../ubuntu_chroot.tar.gz
+          ls | xargs sudo tar -czvf ../ubuntu_chroot.tar.gz
           cd ..
           sudo rm -rf chroot
       - name: 分割文件
