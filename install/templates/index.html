@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>磁盘操作</title>
+    <title>Ubuntu安装程序 by xumouren225588</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -16,16 +16,17 @@
             });
 
             socket.on('partition_operations_finished', function(data) {
-                alert('磁盘操作完成，即将跳转到上传页面');
+                alert('磁盘分区完成');
                 window.location.href = '/upload';
             });
         });
     </script>
 </head>
 <body>
-    <h1>磁盘操作</h1>
+    <h1>Ubuntu安装程序 by xumouren225588</h1>
+    <p>现在可以安全地取下安装盘了</p>
     <form action="/partition_and_upload" method="post">
-        <label for="disk">选择磁盘：</label>
+        <label for="disk">请选择您要安装的磁盘：</label>
         <select name="disk" id="disk">
             {% for disk in disks %}
                 <option value="{{ disk }}">{{ disk }}</option>
