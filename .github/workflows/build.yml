@@ -76,7 +76,7 @@ jobs:
       - name: 压缩
         run: |
           cd ~/livecd/chroot
-          ls | xargs sudo tar -czvf ../ubuntu_chroot.tar.gz
+          ls -A | xargs sudo tar -czvf ../ubuntu_chroot.tar.gz
           cd ..
           sudo rm -rf chroot
       - name: 分割文件
