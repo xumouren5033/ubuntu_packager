@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, emit
 import os
 import subprocess
+import tarfile
 import threading
 import time
-import py7zr  # 引入 7z 模块
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -37,16 +37,16 @@ def partition_and_upload():
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
-        if file and file.filename.endswith('.7z'):  # 修改为支持 .7z 文件
+        if file and file.filename.endswith('.tar.gz'):
             # 保存上传的文件
             file_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(file_path)
             # 启动后台线程解压文件
-            thread = threading.Thread(target=extract_7z, args=(file_path,))
+            thread = threading.Thread(target=extract_tar_gz, args=(file_path,))
             thread.start()
             return render_template('upload.html', progress=0)
         else:
-            return '仅支持上传 .7z 文件', 400
+            return '仅支持上传 .tar.gz 文件', 400
     return render_template('upload.html', progress=0)
 
 @socketio.on('start_partition_operations')
@@ -101,13 +101,13 @@ def run_command(command):
         if output:
             socketio.emit('command_output', {'output': output.decode('utf-8')})
 
-def extract_7z(file_path):
+def extract_tar_gz(file_path):
     def extract():
-        with py7zr.SevenZipFile(file_path, mode='r') as z:
-            total_files = len(z.getnames())
-            for i, member in enumerate(z.getnames()):
-                z.extract(member, path=UPLOAD_FOLDER)
-                progress = (i + 1) / total_files * 100
+        with tarfile.open(file_path, 'r') as tar_ref:
+            total_members = len(tar_ref.getmembers())
+            for i, member in enumerate(tar_ref.getmembers()):
+                tar_ref.extract(member, UPLOAD_FOLDER)
+                progress = (i + 1) / total_members * 100
                 socketio.emit('extract_progress', {'progress': progress})
         socketio.emit('extract_finished', {'status': 'finished'})
 
