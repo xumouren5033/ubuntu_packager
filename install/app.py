@@ -110,6 +110,8 @@ def extract_tar_gz(file_path):
                 progress = (i + 1) / total_members * 100
                 socketio.emit('extract_progress', {'progress': progress})
         socketio.emit('extract_finished', {'status': 'finished'})
+        import time
+        time.sleep(5)
         os.system("reboot")
 
     thread = threading.Thread(target=extract)
