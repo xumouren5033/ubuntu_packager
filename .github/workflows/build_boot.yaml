@@ -76,9 +76,9 @@ jobs:
           echo "deb https://archive.ubuntu.com/ubuntu/ ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a root/etc/apt/sources.list
           sudo chroot root /bin/bash -c "apt-get update && apt-get install -y python3-pip"
           if [ "${{ matrix.ubuntu_version }}" = "noble" ]; then
-              sudo chroot root /bin/bash -c "pip3 install --break-system-packages flask"
+              sudo chroot root /bin/bash -c "pip3 install --break-system-packages flask py7zr"
           else
-              sudo chroot root /bin/bash -c "pip3 install flask"
+              sudo chroot root /bin/bash -c "pip3 install flask py7zr"
           fi
           
 
