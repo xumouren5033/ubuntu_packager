@@ -61,7 +61,7 @@ jobs:
       - name: 压缩
         run: |
           cd ~/livecd/chroot
-          find . -print | sudo tar -czvf ../ubuntu_chroot.tar.gz --files-from=-
+          tar -czvf ../ubuntu_chroot.tar.gz --transform='s,^\./,,S' .
           cd ..
           sudo rm -rf chroot
       - name: 分割文件
