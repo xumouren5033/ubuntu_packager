@@ -98,7 +98,7 @@ jobs:
           mount -t sysfs none /sys
           /bin/busybox --install -s
           cd /install
-          python3 app.py
+          /usr/bin/python3 app.py
           EOF
           sudo chmod +x root/init
           
