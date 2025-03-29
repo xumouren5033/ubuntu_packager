@@ -11,7 +11,7 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
 # 设置上传文件的保存路径
-UPLOAD_FOLDER = '/mnt/ext4_partition/uploads'
+UPLOAD_FOLDER = '/mnt/ext4_partition'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
