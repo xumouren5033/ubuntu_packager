@@ -8,8 +8,10 @@ on:
         default: 'noble'
         type: choice
         options:
-          - jammy
           - noble
+          - jammy
+          - focal
+          - oracular
       packages:
         description: '预装软件包列表（每个软件包的名字之间以空格分隔）'
         required: false
