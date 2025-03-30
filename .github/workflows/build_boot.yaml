@@ -97,6 +97,7 @@ jobs:
           mount -t proc none /proc
           mount -t sysfs none /sys
           /bin/busybox --install -s
+          sleep 10
           cd /install
           /usr/bin/python3 app.py
           EOF
