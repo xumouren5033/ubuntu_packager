@@ -45,7 +45,7 @@ jobs:
           echo "deb http://archive.ubuntu.com/ubuntu ${{ matrix.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ${{ env.PKG }}"
-
+          sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
           
           sudo pkill -9 -f "./chroot" || true
           sudo umount -l chroot/dev
