@@ -102,7 +102,7 @@ jobs:
           EOF
           sudo chmod +x root/init
           
-          sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
+          
 
       - name: 复制initrd.img到boot.img
         run: |
@@ -127,7 +127,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          body: "root密码为1234，请先下载以boot开头的所有文件，然后运行copy /b boot_part_* boot.img（Windows系统命令）以合并文件"
+          body: "请先下载以boot开头的所有文件，然后运行copy /b boot_part_* boot.img（Windows系统命令）以合并文件"
           files: |
             ./boot_part_*
           token: ${{ secrets.GITHUB_TOKEN }}
