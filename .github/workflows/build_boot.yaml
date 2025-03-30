@@ -101,7 +101,7 @@ jobs:
           /usr/bin/python3 app.py
           EOF
           sudo chmod +x root/init
-          
+          sudo chroot root /bin/bash -c "echo -e '1234\n1234' | passwd root"
           
 
       - name: 复制initrd.img到boot.img
