@@ -1,6 +1,5 @@
 name: 定时构建自定义chroot
 on:
-  push:
   schedule:
     - cron: '0 0 * * *'
 env:
