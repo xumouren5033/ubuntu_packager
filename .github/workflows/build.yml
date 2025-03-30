@@ -62,7 +62,7 @@ jobs:
           echo "deb http://archive.ubuntu.com/ubuntu ${{ github.event.inputs.ubuntu_version }}-updates universe" | sudo tee -a chroot/etc/apt/sources.list
 
           sudo chroot chroot /bin/bash -c "apt-get update && apt-get install -y linux-image-generic ${{ github.event.inputs.packages }}"
-
+          sudo chroot chroot /bin/bash -c "echo -e '1234\n1234' | passwd root"
           
           sudo pkill -9 -f "./chroot" || true
           sudo umount -l chroot/dev
@@ -89,7 +89,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}  # 使用推送的标签名
           name: ${{ env.VERSION }}  # Release 名称
-          body: "请先下载以part开头的所有文件，然后运行copy /b part_* rootfs.tar.gz（Windows系统命令）以合并文件"  # Release 描述
+          body: "root密码为1234，请先下载以part开头的所有文件，然后运行copy /b part_* rootfs.tar.gz（Windows系统命令）以合并文件"  # Release 描述
           files: |
             ./part_*
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
