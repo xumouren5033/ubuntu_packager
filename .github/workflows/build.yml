@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       custom_packages:
-        description: '请输入要安装的软件包（用英文逗号分隔，不能有空格）'
+        description: '请输入要安装的软件包（英文逗号分隔，不能有空格）'
         required: false
         default: ''
       debian_version:
         description: '请选择Debian版本'
         required: true
         default: 'bullseye'
+        type: choice
         options:
           - bullseye
           - bookworm
@@ -43,12 +44,12 @@ jobs:
           cd /live-build
           lb config
 
-      - name: Install custom packages (if provided)
+      - name: Add custom packages to packages.list (if provided)
         if: github.event.inputs.custom_packages != ''
         run: |
           cd /live-build
-          echo "debconf debconf/frontend select Noninteractive" | debconf-set-selections
-          lb config --packages "${{ github.event.inputs.custom_packages }}"
+          mkdir -p config/package-lists
+          echo "${{ github.event.inputs.custom_packages }}" | tr ',' '\n' > config/package-lists/custom.list.chroot
 
       - name: Build Debian Live Image
         run: |
@@ -101,7 +102,8 @@ jobs:
       - name: Install GNOME desktop environment
         run: |
           cd /live-build
-          lb config --packages "gnome"
+          mkdir -p config/package-lists
+          echo "gnome-desktop-environment" > config/package-lists/custom.list.chroot
 
       - name: Build Debian Live Image
         run: |
@@ -114,8 +116,7 @@ jobs:
           cd /live-build
           ISO_FILE=$(ls *.iso | head -n 1)
           echo "Found ISO file: $ISO_FILE"
-          split -b 1G "$ISO_FILE" "${ISO_FILE%.iso}.part_"
-          echo "::set-output name=iso_file::$ISO_FILE"
+          split -b 1G "$ISO_FILE" "part_"
 
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
@@ -124,5 +125,5 @@ jobs:
           name: ${{ github.run_number }}_debian
           body: "谢谢使用"
           files: |
-            /live-build/${{ steps.find_and_split_iso.outputs.iso_file }}.part_*
+            /live-build/part_*
           token: ${{ secrets.GITHUB_TOKEN }}
