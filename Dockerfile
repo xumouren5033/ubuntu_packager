@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y live-build
 
 # 设置工作目录
 WORKDIR /live-build
-RUN mkdir -p /live-build/binary
 
 # 运行 lb config 生成配置文件
 RUN lb config
