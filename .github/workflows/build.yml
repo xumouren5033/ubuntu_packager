@@ -32,6 +32,7 @@ jobs:
         run: |
           docker build -t live-build-container .
           docker run --privileged --rm -v $(pwd)/output:/live-build/output live-build-container
+          ls ./output
 
       
       - name: 创建并上传 Release
