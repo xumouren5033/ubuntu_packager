@@ -11,6 +11,7 @@ on:
         description: 'Select Debian version'
         required: true
         default: 'bullseye'
+        type: choice
         options:
           - bullseye
           - bookworm
