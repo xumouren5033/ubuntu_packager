@@ -31,7 +31,8 @@ jobs:
       - name: Build and run Docker container
         run: |
           docker build -t live-build-container .
-          docker run --privileged --rm -v $(pwd)/output:/live-build/binary live-build-container
+          docker run --privileged live-build-container
+          docker cp live-build-container:/live-build/binary ./output
           ls ./output
 
       
