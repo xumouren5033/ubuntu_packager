@@ -12,3 +12,4 @@ RUN lb config
 
 # 运行 live-build 构建
 CMD ["lb", "build"]
+COPY --from=live-build-container /live-build/binary /home/output
