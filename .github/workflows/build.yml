@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       custom_packages:
-        description: '请输入要安装的软件包'
+        description: '请输入要安装的软件包（用英文逗号分隔，不能有空格）'
         required: false
         default: ''
       debian_version:
-        description: 'Select Debian version'
+        description: '请选择Debian版本'
         required: true
         default: 'bullseye'
         options:
