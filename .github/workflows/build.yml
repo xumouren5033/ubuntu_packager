@@ -33,7 +33,7 @@ jobs:
           docker build -t live-build-container .
           docker run --privileged live-build-container
           docker cp live-build-container:/live-build/binary ./output
-          ls ./output
+          ls /home/output
 
       
       - name: 创建并上传 Release
@@ -43,5 +43,5 @@ jobs:
           name: ${{ github.run_number }}_debian
           body: "谢谢使用"  # Release 描述
           files: |
-            ./output/*.iso
+            /home/output/*.iso
           token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
