@@ -33,23 +33,13 @@ jobs:
           docker build -t live-build-container .
           docker run --privileged --rm -v $(pwd)/output:/live-build/output live-build-container
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 创建并上传 Release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.run_number }}_debian
-          release_name: Release ${{ github.run_number }}_debian
-          draft: false
-          prerelease: false
-
-      - name: Upload Debian Live Image
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./output/image.iso  # 替换为实际生成的镜像文件路径
-          asset_name: debian-live-image-${{ github.run_number }}_debian.iso
-          asset_content_type: application/octet-stream
+          tag_name: ${{ github.run_number }}_debian  # 使用推送的标签名
+          name: ${{ github.run_number }}_debian
+          body: "谢谢使用"  # Release 描述
+          files: |
+            ./output/*.iso
+          token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
