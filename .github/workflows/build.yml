@@ -8,40 +8,48 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: debian:latest  # 使用最新的 Debian 镜像
 
     steps:
-      #- name: 清理磁盘空间
-        #uses: jlumbroso/free-disk-space@main
-        #with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          #tool-cache: false
-        
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          #android: true
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and run Docker container
+      - name: Install dependencies
         run: |
-          docker build -t live-build-container .
-          docker run --privileged live-build-container
-          docker cp live-build-container:/live-build/binary ./output
-          ls /home/output
+          # 更新包列表并安装必要的工具
+          apt-get update
+          apt-get install -y live-build
 
-      
-      - name: 创建并上传 Release
+      - name: Create live-build directory
+        run: |
+          # 创建 live-build 工作目录
+          mkdir -p /live-build
+
+      - name: Run lb config to generate configuration files
+        run: |
+          # 运行 lb config 生成配置文件
+          cd /live-build
+          lb config
+
+      - name: Build Debian Live Image
+        run: |
+          # 构建 Debian Live 镜像
+          cd /live-build
+          lb build
+
+      - name: Copy output files to GitHub Actions workspace
+        run: |
+          # 将生成的文件复制到 GitHub Actions 工作区
+          mkdir -p /github/workspace/output
+          cp -r /live-build/binary/* /github/workspace/output/
+
+      - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.run_number }}_debian  # 使用推送的标签名
+          tag_name: ${{ github.run_number }}_debian
           name: ${{ github.run_number }}_debian
-          body: "谢谢使用"  # Release 描述
+          body: "谢谢使用"
           files: |
-            /home/output/*.iso
-          token: ${{ secrets.GITHUB_TOKEN }}  # 使用默认的 GITHUB_TOKEN
+            /github/workspace/output/*.iso
+          token: ${{ secrets.GITHUB_TOKEN }}
