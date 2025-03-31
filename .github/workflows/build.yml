@@ -38,11 +38,7 @@ jobs:
           cd /live-build
           lb build
 
-      - name: Copy output files to GitHub Actions workspace
-        run: |
-          # 将生成的文件复制到 GitHub Actions 工作区
-          mkdir -p /github/workspace/output
-          cp -r /live-build/binary/* /github/workspace/output/
+      
 
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
@@ -51,5 +47,5 @@ jobs:
           name: ${{ github.run_number }}_debian
           body: "谢谢使用"
           files: |
-            /github/workspace/output/*.iso
+            /live-build/*.iso
           token: ${{ secrets.GITHUB_TOKEN }}
