@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: debian:latest  # 使用最新的 Debian 镜像
-
+      options: --privileged
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
