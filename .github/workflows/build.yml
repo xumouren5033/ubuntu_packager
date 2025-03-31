@@ -56,13 +56,7 @@ jobs:
           cd /live-build
           lb build
 
-      - name: Find first ISO file and split into 1GB chunks
-        id: find_and_split_iso
-        run: |
-          cd /live-build
-          ISO_FILE=$(ls *.iso | head -n 1)
-          echo "Found ISO file: $ISO_FILE"
-          split -b 1G "$ISO_FILE" "part_"
+      
           
 
       - name: Create and upload Release
@@ -72,7 +66,7 @@ jobs:
           name: ${{ github.run_number }}_debian
           body: "谢谢使用"
           files: |
-            /live-build/part_*
+            /live-build/*.iso
           token: ${{ secrets.GITHUB_TOKEN }}
 
   build_scheduled:
@@ -110,13 +104,7 @@ jobs:
           cd /live-build
           lb build
 
-      - name: Find first ISO file and split into 1GB chunks
-        id: find_and_split_iso
-        run: |
-          cd /live-build
-          ISO_FILE=$(ls *.iso | head -n 1)
-          echo "Found ISO file: $ISO_FILE"
-          split -b 1G "$ISO_FILE" "part_"
+      
 
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
@@ -125,5 +113,5 @@ jobs:
           name: ${{ github.event.scheduled_at }}_debian
           body: "谢谢使用"
           files: |
-            /live-build/part_*
+            /live-build/*.iso
           token: ${{ secrets.GITHUB_TOKEN }}
