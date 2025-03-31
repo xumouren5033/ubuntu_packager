@@ -30,8 +30,8 @@ jobs:
 
       - name: Build and run Docker container
         run: |
-          docker build --privileged -t live-build-container .
-          docker run --rm -v $(pwd)/output:/live-build/output live-build-container
+          docker build -t live-build-container .
+          docker run --privileged --rm -v $(pwd)/output:/live-build/output live-build-container
 
       - name: Create Release
         id: create_release
