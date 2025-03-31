@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 清理磁盘空间
-        uses: jlumbroso/free-disk-space@main
-        with:
+      #- name: 清理磁盘空间
+        #uses: jlumbroso/free-disk-space@main
+        #with:
           # this might remove tools that are actually needed,
           # if set to "true" but frees about 6 GB
-          tool-cache: false
+          #tool-cache: false
         
           # all of these default to true, but feel free to set to
           # "false" if necessary for your workflow
-          android: true
+          #android: true
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -30,7 +30,7 @@ jobs:
 
       - name: Build and run Docker container
         run: |
-          docker build -t live-build-container .
+          docker build --privileged -t live-build-container .
           docker run --rm -v $(pwd)/output:/live-build/output live-build-container
 
       - name: Create Release
