@@ -4,14 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       custom_packages:
-        description: 'Enter custom packages to install (comma-separated)'
+        description: '请输入要安装的软件包'
         required: false
         default: ''
       debian_version:
         description: 'Select Debian version'
         required: true
         default: 'bullseye'
-        type: choice
         options:
           - bullseye
           - bookworm
@@ -20,10 +19,11 @@ on:
     - cron: '0 0 * * *'  # 每天午夜运行
 
 jobs:
-  build:
+  build_manual:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     container:
-      image: ${{ github.event_name == 'schedule' && 'debian:latest' || 'debian:' + github.event.inputs.debian_version }}
+      image: "debian:${{ github.event.inputs.debian_version }}"
       options: --privileged
     steps:
       - name: Checkout repository
@@ -31,50 +31,38 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # 更新包列表并安装必要的工具
           apt-get update
           apt-get install -y live-build xorriso
 
       - name: Create live-build directory
         run: |
-          # 创建 live-build 工作目录
           mkdir -p /live-build
 
       - name: Run lb config to generate configuration files
         run: |
-          # 运行 lb config 生成配置文件
           cd /live-build
           lb config
 
       - name: Install custom packages (if provided)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.custom_packages != ''
+        if: github.event.inputs.custom_packages != ''
         run: |
-          # 安装用户指定的自定义软件包
           cd /live-build
           echo "debconf debconf/frontend select Noninteractive" | debconf-set-selections
           lb config --packages "${{ github.event.inputs.custom_packages }}"
 
-      - name: Install GNOME desktop environment (if running on schedule)
-        if: github.event_name == 'schedule'
-        run: |
-          # 安装 GNOME 桌面环境
-          cd /live-build
-          lb config --packages "gnome"
-
       - name: Build Debian Live Image
         run: |
-          # 构建 Debian Live 镜像
           cd /live-build
           lb build
 
       - name: Find first ISO file and split into 1GB chunks
         id: find_and_split_iso
         run: |
-          # 自动获取第一个 ISO 文件名
           cd /live-build
           ISO_FILE=$(ls *.iso | head -n 1)
-          # 将 ISO 文件分割为 1GB 的分卷
-          split -b 1G "$ISO_FILE" "part_"
+          echo "Found ISO file: $ISO_FILE"
+          split -b 1G "$ISO_FILE" "${ISO_FILE%.iso}.part_"
+          echo "::set-output name=iso_file::$ISO_FILE"
 
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
@@ -83,5 +71,58 @@ jobs:
           name: ${{ github.run_number }}_debian
           body: "谢谢使用"
           files: |
-            /live-build/part_*
+            /live-build/${{ steps.find_and_split_iso.outputs.iso_file }}.part_*
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  build_scheduled:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    container:
+      image: "debian:latest"
+      options: --privileged
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y live-build xorriso
+
+      - name: Create live-build directory
+        run: |
+          mkdir -p /live-build
+
+      - name: Run lb config to generate configuration files
+        run: |
+          cd /live-build
+          lb config
+
+      - name: Install GNOME desktop environment
+        run: |
+          cd /live-build
+          lb config --packages "gnome"
+
+      - name: Build Debian Live Image
+        run: |
+          cd /live-build
+          lb build
+
+      - name: Find first ISO file and split into 1GB chunks
+        id: find_and_split_iso
+        run: |
+          cd /live-build
+          ISO_FILE=$(ls *.iso | head -n 1)
+          echo "Found ISO file: $ISO_FILE"
+          split -b 1G "$ISO_FILE" "${ISO_FILE%.iso}.part_"
+          echo "::set-output name=iso_file::$ISO_FILE"
+
+      - name: Create and upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.run_number }}_debian
+          name: ${{ github.run_number }}_debian
+          body: "谢谢使用"
+          files: |
+            /live-build/${{ steps.find_and_split_iso.outputs.iso_file }}.part_*
           token: ${{ secrets.GITHUB_TOKEN }}
