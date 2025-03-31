@@ -62,8 +62,8 @@ jobs:
           cd /live-build
           ISO_FILE=$(ls *.iso | head -n 1)
           echo "Found ISO file: $ISO_FILE"
-          split -b 1G "$ISO_FILE" "${ISO_FILE%.iso}.part_"
-          echo "::set-output name=iso_file::$ISO_FILE"
+          split -b 1G "$ISO_FILE" "part_"
+          
 
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
@@ -72,7 +72,7 @@ jobs:
           name: ${{ github.run_number }}_debian
           body: "谢谢使用"
           files: |
-            /live-build/${{ steps.find_and_split_iso.outputs.iso_file }}.part_*
+            /live-build/part_*
           token: ${{ secrets.GITHUB_TOKEN }}
 
   build_scheduled:
@@ -121,8 +121,8 @@ jobs:
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.run_number }}_debian
-          name: ${{ github.run_number }}_debian
+          tag_name: ${{ github.event.scheduled_at }}_debian
+          name: ${{ github.event.scheduled_at }}_debian
           body: "谢谢使用"
           files: |
             /live-build/part_*
