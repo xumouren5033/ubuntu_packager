@@ -24,7 +24,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     container:
-      image: "debian:${{ github.event.inputs.debian_version }}"
+      image: "debian:latest"
       options: --privileged
     steps:
       - name: Checkout repository
@@ -42,7 +42,7 @@ jobs:
       - name: Run lb config to generate configuration files
         run: |
           cd /live-build
-          lb config
+          lb config --distribution ${{ github.event.inputs.debian_version }}
 
       - name: Add custom packages to packages.list (if provided)
         if: github.event.inputs.custom_packages != ''
@@ -62,8 +62,8 @@ jobs:
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.run_number }}_debian
-          name: ${{ github.run_number }}_debian
+          tag_name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}
+          name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}
           body: "谢谢使用"
           files: |
             /live-build/*.iso
@@ -109,8 +109,8 @@ jobs:
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.scheduled_at }}_debian
-          name: ${{ github.event.scheduled_at }}_debian
+          tag_name: ${{ github.event.scheduled_at }}_debian_latest
+          name: ${{ github.event.scheduled_at }}_debian_latest
           body: "谢谢使用"
           files: |
             /live-build/*.iso
