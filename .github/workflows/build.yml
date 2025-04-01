@@ -93,12 +93,7 @@ jobs:
           cd /live-build
           lb config
 
-      - name: Install GNOME desktop environment
-        run: |
-          cd /live-build
-          mkdir -p config/package-lists
-          echo "gnome-desktop-environment" > config/package-lists/custom.list.chroot
-
+      
       - name: Build Debian Live Image
         run: |
           cd /live-build
