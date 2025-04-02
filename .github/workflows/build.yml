@@ -16,6 +16,14 @@ on:
           - bullseye
           - bookworm
           - sid
+      architecture:
+        description: '请选择架构'
+        required: true
+        default: 'amd64'
+        type: choice
+        options:
+          - amd64
+          - i386
   schedule:
     - cron: '0 0 * * *'  # 每天午夜运行
 
@@ -42,7 +50,7 @@ jobs:
       - name: Run lb config to generate configuration files
         run: |
           cd /live-build
-          lb config --distribution ${{ github.event.inputs.debian_version }}
+          lb config --distribution ${{ github.event.inputs.debian_version }} --architecture ${{ github.event.inputs.architecture }}
 
       - name: Add custom packages to packages.list (if provided)
         if: github.event.inputs.custom_packages != ''
@@ -56,14 +64,11 @@ jobs:
           cd /live-build
           lb build
 
-      
-          
-
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}
-          name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}
+          tag_name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}
+          name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}
           body: "谢谢使用"
           files: |
             /live-build/*.iso
@@ -93,19 +98,16 @@ jobs:
           cd /live-build
           lb config
 
-      
       - name: Build Debian Live Image
         run: |
           cd /live-build
           lb build
 
-      
-
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.scheduled_at }}_debian_latest
-          name: ${{ github.event.scheduled_at }}_debian_latest
+          tag_name: $(date +'%Y%m%d')_debian_latest
+          name: $(date +'%Y%m%d')_debian_latest
           body: "谢谢使用"
           files: |
             /live-build/*.iso
