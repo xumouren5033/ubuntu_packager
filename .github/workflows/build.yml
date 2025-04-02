@@ -102,12 +102,13 @@ jobs:
         run: |
           cd /live-build
           lb build
+          echo "VER=$(date +'%Y%m%d')_debian_latest">>$GITHUB_ENV
 
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: $(date +'%Y%m%d')_debian_latest
-          name: $(date +'%Y%m%d')_debian_latest
+          tag_name: $VER
+          name: $VER
           body: "谢谢使用"
           files: |
             /live-build/*.iso
