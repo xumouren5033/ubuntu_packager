@@ -25,7 +25,7 @@ on:
           - amd64
           - i386
   schedule:
-    - cron: '0 0 * * *'  # 每天午夜运行
+    - cron: '0 * * * *'  # 每天午夜运行
 
 jobs:
   build_manual:
@@ -107,8 +107,8 @@ jobs:
       - name: Create and upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: $VER
-          name: $VER
+          tag_name: ${{ env.VER }}
+          name: ${{ env.VER }}
           body: "谢谢使用"
           files: |
             /live-build/*.iso
