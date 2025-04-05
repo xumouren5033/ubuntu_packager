@@ -50,14 +50,13 @@ jobs:
       - name: Run lb config to generate configuration files
         run: |
           cd /live-build
-          lb config --distribution ${{ github.event.inputs.debian_version }} --architecture ${{ github.event.inputs.architecture }}
+          lb config --distribution ${{ github.event.inputs.debian_version }} --architecture ${{ github.event.inputs.architecture }} --debian-installer live
 
       - name: Add custom packages to packages.list (if provided)
-        if: github.event.inputs.custom_packages != ''
         run: |
           cd /live-build
           mkdir -p config/package-lists
-          echo "${{ github.event.inputs.custom_packages }}" | tr ',' '\n' > config/package-lists/custom.list.chroot
+          echo "debian-installer-launcher,${{ github.event.inputs.custom_packages }}" | tr ',' '\n' > config/package-lists/custom.list.chroot
 
       - name: Build Debian Live Image
         run: |
