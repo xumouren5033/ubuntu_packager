@@ -96,6 +96,11 @@ jobs:
         run: |
           cd /live-build
           lb config
+      - name: Add custom packages to packages.list (if provided)
+        run: |
+          cd /live-build
+          mkdir -p config/package-lists
+          echo "debian-installer-launcher debootstrap" > config/package-lists/custom.list.chroot
 
       - name: Build Debian Live Image
         run: |
