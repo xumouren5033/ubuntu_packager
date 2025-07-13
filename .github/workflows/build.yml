@@ -63,15 +63,21 @@ jobs:
           cd /live-build
           lb build
 
-      - name: Create and upload Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload ISO to 123 Cloud Disk and get share link
+        id: upload_and_share
+        run: |
+          python upload_and_share.py ${{ secrets.ACCESS_KEY }} ${{ secrets.SECRET_KEY }} manual ${{ github.run_number }}
+        env:
+          GITHUB_OUTPUT: $GITHUB_OUTPUT
+
+      - name: Create GitHub Release with share link
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}
-          name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}
-          body: "谢谢使用"
-          files: |
-            /live-build/*.iso
-          token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}
+          body: "ISO 文件已上传到 123 云盘，点击以下链接下载：\n${{ steps.upload_and_share.outputs.share_url }}"
 
   build_scheduled:
     if: github.event_name == 'schedule'
@@ -96,6 +102,7 @@ jobs:
         run: |
           cd /live-build
           lb config
+
       - name: Add custom packages to packages.list (if provided)
         run: |
           cd /live-build
@@ -108,12 +115,18 @@ jobs:
           lb build
           echo "VER=$(date +'%Y%m%d')_debian_latest">>$GITHUB_ENV
 
-      - name: Create and upload Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload ISO to 123 Cloud Disk and get share link
+        id: upload_and_share
+        run: |
+          python upload_and_share.py ${{ secrets.ACCESS_KEY }} ${{ secrets.SECRET_KEY }} scheduled
+        env:
+          GITHUB_OUTPUT: $GITHUB_OUTPUT
+
+      - name: Create GitHub Release with share link
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.VER }}
-          name: ${{ env.VER }}
-          body: "谢谢使用"
-          files: |
-            /live-build/*.iso
-          token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: ${{ env.VER }}
+          body: "ISO 文件已上传到 123 云盘，点击以下链接下载：\n${{ steps.upload_and_share.outputs.share_url }}"
