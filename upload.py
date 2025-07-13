@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 from cpan123 import Pan123, File, Share
+import requests
 
 def main():
     # 检查命令行参数
@@ -41,8 +42,8 @@ def main():
         print(f"Failed to create directory '{target_dir_name}': {e}")
         sys.exit(1)
 
-    # 上传 /live-build/ 下的所有 ISO 文件
-    source_dir = "/live-build/"
+    # 上传下载的 ISO 文件
+    source_dir = "./"  # 工件下载到当前目录
     file_ids = []  # 用于存储上传文件的 ID
     for filename in os.listdir(source_dir):
         if filename.endswith(".iso"):
@@ -83,7 +84,8 @@ def main():
         share_url = share_info['data']['share_url']
         print(f"Directory '{target_dir_name}' shared successfully.")
         print(f"Share URL: {share_url}")
-        # 将分享链接输出到环境变量，供 GitHub Actions 使用
+
+        # 将分享链接写入到 GITHUB_OUTPUT 文件中
         with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
             f.write(f"share_url={share_url}\n")
     except Exception as e:
