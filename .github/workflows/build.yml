@@ -66,7 +66,7 @@ jobs:
       - name: Upload ISO to 123 Cloud Disk and get share link
         id: upload_and_share
         run: |
-          python upload_and_share.py ${{ secrets.ACCESS_KEY }} ${{ secrets.SECRET_KEY }} manual ${{ github.run_number }}
+          python upload.py ${{ secrets.ACCESS_KEY }} ${{ secrets.SECRET_KEY }} manual ${{ github.run_number }}
         env:
           GITHUB_OUTPUT: $GITHUB_OUTPUT
 
@@ -118,7 +118,7 @@ jobs:
       - name: Upload ISO to 123 Cloud Disk and get share link
         id: upload_and_share
         run: |
-          python upload_and_share.py ${{ secrets.ACCESS_KEY }} ${{ secrets.SECRET_KEY }} scheduled
+          python upload.py ${{ secrets.ACCESS_KEY }} ${{ secrets.SECRET_KEY }} scheduled
         env:
           GITHUB_OUTPUT: $GITHUB_OUTPUT
 
