@@ -67,7 +67,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: debian-live-image
-          path: /live-build/*.iso
+          path: /live-build/live-image-${{ github.event.inputs.architecture }}.hybrid.iso
+
 
   build_scheduled:
     if: github.event_name == 'schedule'
@@ -108,7 +109,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: debian-live-image
-          path: /live-build/*.iso
+          path: /live-build/live-image-amd64.hybrid.iso
+
 
   upload_manual:
     if: github.event_name == 'workflow_dispatch'
