@@ -127,7 +127,7 @@ jobs:
 
       - name: Install cpan123
         run: |
-          pip install cpan123
+          pip install cpan123 requests
 
       - name: Upload ISO to 123 Cloud Disk and get share link
         id: upload_and_share
@@ -160,7 +160,7 @@ jobs:
 
       - name: Install cpan123
         run: |
-          pip install cpan123
+          pip install cpan123 requests
 
       - name: Upload ISO to 123 Cloud Disk and get share link
         id: upload_and_share
