@@ -32,7 +32,7 @@ def create_folder(session, parent_folder_id, folder_name):
         )
         response.raise_for_status()
         folder_data = response.json()
-        if folder_data["code"] == 200:
+        if response.status_code == 200:
             return folder_data["folder_id"]
         else:
             print(f"Failed to create folder {folder_name}: {folder_data}")
@@ -60,7 +60,7 @@ def upload_file(session, folder_id, file_path):
         )
         response.raise_for_status()
         upload_data = response.json()
-        if upload_data["code"] == 200:
+        if response.status_code == 200:
             upload_url = upload_data["upload_url"]
             # 上传文件
             with open(file_path, "rb") as f:
@@ -70,7 +70,7 @@ def upload_file(session, folder_id, file_path):
                     data={"filesize": file_size, "name": file_name},
                 )
                 upload_response.raise_for_status()
-                if upload_response.json()["code"] == 200:
+                if upload_response.status_code == 200:
                     print(f"File {file_name} uploaded successfully.")
                     return upload_data["file_id"]
                 else:
@@ -93,7 +93,7 @@ def get_share_url(session, file_id):
         )
         response.raise_for_status()
         share_data = response.json()
-        if share_data["code"] == 200:
+        if response.status_code == 200:
             return share_data["results"][0]["directlink"]
         else:
             print(f"Failed to get share URL for file {file_id}: {share_data}")
