@@ -72,28 +72,8 @@ jobs:
           files: |
             /live-build/*.iso
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push ISO to 123pan offline download
-        env:
-          API_TOKEN: ${{ secrets.PAN123_API_TOKEN }}
-          FOLDER_ID: ${{ secrets.PAN123_FOLDER_ID }}
-        run: |
-          # 取第一个 ISO 下载地址
-          ORIGINAL_URL=$(curl -s \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VER || format('v{0}_debian_{1}_{2}', github.run_number, github.event.inputs.debian_version, github.event.inputs.architecture) }}" \
-            | jq -r '.assets[0].browser_download_url')
-
-          # 拼出代理加速 URL
-          DOWNLOAD_LINK="https://gh.llkk.cc/$ORIGINAL_URL"
-
-          FILE_NAME=v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}.iso
-
-          curl -X POST "https://open-api.123pan.com/api/v1/offline/download" \
-            -H "Authorization: Bearer $API_TOKEN" \
-            -H "Platform: open_platform" \
-            -H "Content-Type: application/json" \
-            -d "{\"url\":\"$DOWNLOAD_LINK\", \"dirID\": $FOLDER_ID, \"fileName\":\"$FILE_NAME\"}"
+      
+      
   build_scheduled:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
@@ -138,26 +118,44 @@ jobs:
           files: |
             /live-build/*.iso
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push ISO to 123pan offline download
-        env:
-          API_TOKEN: ${{ secrets.PAN123_API_TOKEN }}
-          FOLDER_ID: ${{ secrets.PAN123_FOLDER_ID }}
+
+  
+  download_to_123pan:
+    name: Push ISO to 123Pan via proxy
+    runs-on: ubuntu-latest          # 不用容器，避免权限/工具问题
+    needs:                        # 等 ISO 上传完再启动
+      - build_manual
+      - build_scheduled
+    if: always() && (needs.build_manual.result == 'success' || needs.build_scheduled.result == 'success')
+    steps:
+      - name: Get release tag
+        id: tag
         run: |
-          # 取第一个 ISO 下载地址
-          ORIGINAL_URL=$(curl -s \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VER || format('v{0}_debian_{1}_{2}', github.run_number, github.event.inputs.debian_version, github.event.inputs.architecture) }}" \
-            | jq -r '.assets[0].browser_download_url')
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}"
+          else
+            tag="$(date +'%Y%m%d')_debian_latest"
+          fi
+          echo "TAG=$tag" >> $GITHUB_OUTPUT
 
-          # 拼出代理加速 URL
-          DOWNLOAD_LINK="https://gh.llkk.cc/$ORIGINAL_URL"
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-          FILE_NAME=${{ env.VER }}.iso
+      - name: Fetch ISO download link
+        id: link
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          url=$(gh release view "${{ steps.tag.outputs.TAG }}" --json assets -q '.assets[0].url')
+          echo "ISO_URL=https://gh.llkk.cc/$url" >> $GITHUB_OUTPUT
+          echo "FILE_NAME=${{ steps.tag.outputs.TAG }}.iso"  >> $GITHUB_OUTPUT
 
+      - name: Trigger 123Pan offline download
+        run: |
           curl -X POST "https://open-api.123pan.com/api/v1/offline/download" \
-            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Authorization: Bearer ${{ secrets.PAN123_API_TOKEN }}" \
             -H "Platform: open_platform" \
             -H "Content-Type: application/json" \
-            -d "{\"url\":\"$DOWNLOAD_LINK\", \"dirID\": $FOLDER_ID, \"fileName\":\"$FILE_NAME\"}"
-          
+            -d "{\"url\":\"${{ steps.link.outputs.ISO_URL }}\",
+                 \"dirID\": ${{ secrets.PAN123_FOLDER_ID }},
+                 \"fileName\":\"${{ steps.link.outputs.FILE_NAME }}\"}"
