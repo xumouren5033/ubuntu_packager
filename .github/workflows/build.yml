@@ -148,7 +148,7 @@ jobs:
           raw_url=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/tags/${tag}" \
                     | jq -r '.assets[0].browser_download_url')
           echo "ISO_URL=https://ghproxy.net/$raw_url" >> $GITHUB_OUTPUT
-          echo "FILE_NAME=${{ steps.tag.outputs.TAG }}"   >> $GITHUB_OUTPUT
+          echo "FILE_NAME=${{ steps.tag.outputs.TAG }}.iso"   >> $GITHUB_OUTPUT
 
       - name: Trigger 123Pan offline download
         run: |
