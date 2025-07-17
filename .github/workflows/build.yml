@@ -87,7 +87,7 @@ jobs:
           # 拼出代理加速 URL
           DOWNLOAD_LINK="https://gh.llkk.cc/$ORIGINAL_URL"
 
-          FILE_NAME=$(basename "$ORIGINAL_URL")
+          FILE_NAME=v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}.iso
 
           curl -X POST "https://open-api.123pan.com/api/v1/offline/download" \
             -H "Authorization: Bearer $API_TOKEN" \
@@ -135,6 +135,9 @@ jobs:
           tag_name: ${{ env.VER }}
           name: ${{ env.VER }}
           body: "谢谢使用"
+          files: |
+            /live-build/*.iso
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push ISO to 123pan offline download
         env:
           API_TOKEN: ${{ secrets.PAN123_API_TOKEN }}
@@ -150,13 +153,11 @@ jobs:
           # 拼出代理加速 URL
           DOWNLOAD_LINK="https://gh.llkk.cc/$ORIGINAL_URL"
 
-          FILE_NAME=$(basename "$ORIGINAL_URL")
+          FILE_NAME=${{ env.VER }}.iso
 
           curl -X POST "https://open-api.123pan.com/api/v1/offline/download" \
             -H "Authorization: Bearer $API_TOKEN" \
             -H "Platform: open_platform" \
             -H "Content-Type: application/json" \
             -d "{\"url\":\"$DOWNLOAD_LINK\", \"dirID\": $FOLDER_ID, \"fileName\":\"$FILE_NAME\"}"
-          files: |
-            /live-build/*.iso
-          token: ${{ secrets.GITHUB_TOKEN }}
+          
