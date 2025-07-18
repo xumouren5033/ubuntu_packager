@@ -133,10 +133,13 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             tag="v${{ github.run_number }}_debian_${{ github.event.inputs.debian_version }}_${{ github.event.inputs.architecture }}"
+            arch=${{ github.event.inputs.architecture }}
           else
             tag="$(date +'%Y%m%d')_debian_latest"
+            arch="amd64"
           fi
           echo "TAG=$tag" >> $GITHUB_OUTPUT
+          echo "ARCH=$arch" >> $GITHUB_OUTPUT
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -145,9 +148,7 @@ jobs:
         id: link
         run: |
           tag="${{ steps.tag.outputs.TAG }}"
-          raw_url=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/tags/${tag}" \
-                    | jq -r '.assets[0].browser_download_url')
-          echo "ISO_URL=https://jiashu.1win.eu.org/$raw_url" >> $GITHUB_OUTPUT
+          echo "ISO_URL=https://jiashu.1win.eu.org/https://github.com/${{ github.repository }}/releases/download/$tag/live-image-${{ steps.tag.outputs.ARCH }}.hybrid.iso" >> $GITHUB_OUTPUT
           echo "FILE_NAME=${{ steps.tag.outputs.TAG }}.iso"   >> $GITHUB_OUTPUT
 
       - name: Trigger 123Pan offline download
