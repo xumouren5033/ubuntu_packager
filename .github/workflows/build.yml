@@ -148,7 +148,7 @@ jobs:
         id: link
         run: |
           tag="${{ steps.tag.outputs.TAG }}"
-          echo "ISO_URL=https://jiashu.1win.eu.org/https://github.com/${{ github.repository }}/releases/download/$tag/live-image-${{ steps.tag.outputs.ARCH }}.hybrid.iso" >> $GITHUB_OUTPUT
+          echo "ISO_URL=https://ghproxy.net/https://github.com/${{ github.repository }}/releases/download/$tag/live-image-${{ steps.tag.outputs.ARCH }}.hybrid.iso" >> $GITHUB_OUTPUT
           echo "FILE_NAME=${{ steps.tag.outputs.TAG }}.iso"   >> $GITHUB_OUTPUT
 
       - name: Trigger 123Pan offline download
