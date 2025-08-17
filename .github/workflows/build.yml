@@ -15,6 +15,7 @@ on:
         options:
           - bullseye
           - bookworm
+          - trixie
           - sid
       architecture:
         description: '请选择架构'
