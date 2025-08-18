@@ -97,7 +97,7 @@ jobs:
       - name: Run lb config to generate configuration files
         run: |
           cd /live-build
-          lb config --debian-installer live --debian-installer-gui true
+          lb config --distribution trixie --debian-installer live --debian-installer-gui true
       - name: Add custom packages to packages.list (if provided)
         run: |
           cd /live-build
